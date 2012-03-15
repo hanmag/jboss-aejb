@@ -19,7 +19,7 @@ To run this subsystem with the provided build scripts, you will need the followi
     * Follow the official Maven installation guide if you don't already have Maven 3 installed. 
     * If you have Maven installed, you can check the version by running this command in a shell prompt:
 
-      > mvn --version 
+	> mvn --version 
 
 3.  The JBoss AS 7 distribution zip
     * For information on how to install and run JBoss, refer to the product documentation.
@@ -56,11 +56,11 @@ Starting AEjb
 -----------------
 Modify the standalone.xml in ${JBOSS_HOME}\standalone\configuration.
 
-	* add extension: <extension module="org.nju.artemis.aejb"/>
+	*	add extension: <extension module="org.nju.artemis.aejb"/>
 
-	* add subsystem: <subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
+	*	add subsystem: <subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
 				<client-service jndi-name="java:global/aejb/client"/>
-			 </subsystem>
+			       </subsystem>
 
 Server Manager
 ----------------------------
@@ -75,13 +75,13 @@ Start the admin console of aejb subsystem
 To stop the console, press Ctrl + C
 
 The admin script has following functions:
-* `overview` - 
-* `deploy` -
-* `undeploy` -
-* `block` -
-* `resume` -
-* `replace` -
-* `switch` -
+	*	`overview` - 
+	*	`deploy` -
+	*	`undeploy` -
+	*	`block` -
+	*	`resume` -
+	*	`replace` -
+	*	`switch` -
 
 
 Application supplier
