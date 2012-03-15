@@ -1,0 +1,6 @@
+<module xmlns="urn:jboss:module:1.1" name="org.nju.artemis.api">
+    <resources>
+        <resource-root path="aejb-api-1.0-SNAPSHOT.jar"/>
+    </resources>
+    
+</module>

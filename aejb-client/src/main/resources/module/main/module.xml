@@ -1,0 +1,6 @@
+<module xmlns="urn:jboss:module:1.1" name="org.nju.artemis.client">
+    <resources>
+        <resource-root path="aejb-client.jar"/>
+    </resources>
+    
+</module>
