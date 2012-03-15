@@ -56,11 +56,15 @@ Starting AEjb
 -----------------
 Modify the standalone.xml in ${JBOSS_HOME}\standalone\configuration.
 
-Add extension:	<extension module="org.nju.artemis.aejb"/>
+Add extension:
 
-Add subsystem:	<subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
-			<client-service jndi-name="java:global/aejb/client"/>
-		</subsystem>
+<extension module="org.nju.artemis.aejb"/>
+
+Add subsystem:
+
+<subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
+	<client-service jndi-name="java:global/aejb/client"/>
+</subsystem>
 
 Server Manager
 ----------------------------
