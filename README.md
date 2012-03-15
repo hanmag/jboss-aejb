@@ -57,8 +57,11 @@ Starting AEjb
 Modify the standalone.xml in ${JBOSS_HOME}\standalone\configuration.
 
 * add extension:
-    "<extension module="org.nju.artemis.aejb"/>"
-* add subsystem: 
+
+    <extension module="org.nju.artemis.aejb"/>
+
+* add subsystem:
+
    <subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
 	<client-service jndi-name="java:global/aejb/client"/>
    </subsystem>
@@ -76,6 +79,7 @@ Start the admin console of aejb subsystem
 To stop the console, press Ctrl + C
 
 The admin script has following functions:
+
 * "overview" --
 * "deploy" --
 * "undeploy" --
