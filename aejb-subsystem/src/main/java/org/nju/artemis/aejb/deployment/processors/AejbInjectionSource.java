@@ -63,11 +63,9 @@ public class AejbInjectionSource extends InjectionSource {
 	@Override
 	public void getResourceValue(ResolutionContext resolutionContext, ServiceBuilder<?> serviceBuilder,	DeploymentPhaseContext phaseContext, Injector<ManagedReferenceFactory> injector) throws DeploymentUnitProcessingException {
 		resolve();
-
 		if (error != null) {
             throw new DeploymentUnitProcessingException(error);
         }
-		
 		if (containerFactory != null) {
             injector.inject(containerFactory);
         }

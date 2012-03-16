@@ -31,15 +31,12 @@ import org.nju.artemis.aejb.component.AcContainer;
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class AEjbInjectionAnnotationProcessor implements DeploymentUnitProcessor {
-
 	Logger log = Logger.getLogger(AEjbInjectionAnnotationProcessor.class);
-
 	private static final DotName AEJB_ANNOTATION = DotName.createSimple(AEjb.class.getName());
 	
 	public static final Phase PHASE = Phase.PARSE;
 	// should be after all components are known
 	public static final int PRIORITY = 0x3800;
-	
 	private AcContainer container;
 
 	@Override
