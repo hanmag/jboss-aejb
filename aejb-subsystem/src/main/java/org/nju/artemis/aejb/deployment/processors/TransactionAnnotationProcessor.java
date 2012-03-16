@@ -33,7 +33,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.value.ImmediateValue;
 import org.nju.artemis.aejb.AEjbLogger;
 import org.nju.artemis.aejb.component.AcContainer;
-import org.nju.artemis.aejb.deployment.transaction.State;
+import org.nju.artemis.aejb.deployment.transaction.TransactionState;
 import org.nju.artemis.aejb.deployment.transaction.TransactionManagerImpl;
 
 /**
@@ -70,6 +70,10 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
 
             container = aejbInfo.get(beanName);
             final TransactionResourceWrapper annotationWrapper = new TransactionResourceWrapper(aejbAnnotation);
+            if(annotationWrapper.states() == null) {
+            	log.warn(aejbAnnotation.name() + " annotation states attribute is empty");
+            	return ;
+            }
             try {
 				processTransaction(annotationWrapper, (MethodInfo) target, moduleDescription);
 			} catch (TransactionProcessFailedException e) {
@@ -81,11 +85,15 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
 	
 	private void processTransaction(TransactionResourceWrapper annotationWrapper, MethodInfo method, final EEModuleDescription eeModuleDescription) throws TransactionProcessFailedException{
 		int states_count = annotationWrapper.states().length;
-		if(states_count != annotationWrapper.next().length)
-			throw new TransactionProcessFailedException("[states] length must equal to [next] length.");
-		State[] states = new State[states_count];
-		Map[] nextStates = new HashMap[states_count];
-		for (int i = 0; i < states_count; i++)
+		if(states_count == 1) {
+			log.warn(annotationWrapper.name() + " annotation states number can not equal 1");
+			return ;
+		}
+		else if(states_count != annotationWrapper.next().length + 1)
+			throw new TransactionProcessFailedException("[states] length must equal to [next] length + 1.");
+		TransactionState[] states = new TransactionState[states_count];
+		Map[] nextStates = new HashMap[states_count-1];
+		for (int i = 0; i < states_count-1; i++)
 			nextStates[i] = new HashMap<String, String>();
 		List<String> portNames = new ArrayList<String>();
 
@@ -108,23 +116,24 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
 				if (!portNames.contains(port))
 					portNames.add(port);
 			}
-			State s = new State(passedPorts, futurePorts);
+			TransactionState s = new TransactionState(passedPorts, futurePorts);
 			states[i] = s;
-
+			if(i == states_count-1)
+				continue;
 			String[] nexts = annotationWrapper.next()[i].split(",");
 			for (String next : nexts) {
 				if (next != null && !next.equals("")) {
 					String[] n = next.split("-");
 					if (n.length != 2)
 						throw new TransactionProcessFailedException("There must be 1 '-' in a next state.");
-					log.info("i:" + i + "-next:" + n);
+//					log.info("i:" + i + "-next:" + n[1]);
 					nextStates[i].put(n[0], n[1]);
-					log.info(nextStates[i]);
+//					log.info(nextStates[i]);
 				}
 			}
 		}
-
-		TransactionManager tm = new TransactionManagerImpl(annotationWrapper.name(), method.name(), (String[]) portNames.toArray(), states, nextStates);
+		final int size = portNames.size();
+		TransactionManager tm = new TransactionManagerImpl(annotationWrapper.name(), method.name(), portNames.toArray(new String[size]), states, nextStates);
 		container.setTransactionManager(tm);
 		bindTransactionManager(tm, method.declaringClass(), eeModuleDescription);
 	}
@@ -167,8 +176,8 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
 
         private TransactionResourceWrapper(final AnnotationInstance annotation) {
             name = stringValueOrNull(annotation, "name");
-            states = enumValueOrNull(annotation, "states");
-            next = enumValueOrNull(annotation, "next");
+            states = arrayValueOrNull(annotation, "states");
+            next = arrayValueOrNull(annotation, "next");
         }
 
         private String name() {
@@ -188,9 +197,9 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
             return value != null ? value.asString() : null;
         }
         
-        private String[] enumValueOrNull(final AnnotationInstance annotation, final String attribute) {
+        private String[] arrayValueOrNull(final AnnotationInstance annotation, final String attribute) {
             final AnnotationValue value = annotation.value(attribute);
-            return value != null ? value.asEnumArray() : null;
+            return value != null ? value.asStringArray() : null;
         }
     }
 }
