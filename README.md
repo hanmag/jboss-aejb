@@ -1,4 +1,4 @@
-JBoss AS AEjb Subsystem
+JBoss AS AEJB Subsystem
 ========================
 
 What is it?
