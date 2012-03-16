@@ -13,6 +13,7 @@ import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
  */
 public class StatusShiftHandler implements OperationStepHandler {
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void execute(OperationContext context) throws OperationFailedException {
 		AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
