@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 @Retention(RUNTIME)
-@Target(FIELD) 
+@Target(FIELD)
 public @interface AEjb {
 	String name() default "";
 
