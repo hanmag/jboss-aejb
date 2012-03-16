@@ -18,6 +18,7 @@ import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.deployment.processors.AEjbInjectionAnnotationProcessor;
 import org.nju.artemis.aejb.deployment.processors.AnnotatedAEJBComponentDescriptionProcessor;
 import org.nju.artemis.aejb.deployment.processors.SubsystemDeploymentProcessor;
+import org.nju.artemis.aejb.deployment.processors.TransactionAnnotationProcessor;
 import org.nju.artemis.aejb.evolution.DuService;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl;
 
@@ -49,6 +50,7 @@ public class AEJBSubsystemAdd extends AbstractBoottimeAddStepHandler {
                 processorTarget.addDeploymentProcessor(SubsystemDeploymentProcessor.PHASE, SubsystemDeploymentProcessor.PRIORITY, new SubsystemDeploymentProcessor());
                 processorTarget.addDeploymentProcessor(AnnotatedAEJBComponentDescriptionProcessor.PHASE, AnnotatedAEJBComponentDescriptionProcessor.PRIORITY, new AnnotatedAEJBComponentDescriptionProcessor());
                 processorTarget.addDeploymentProcessor(AEjbInjectionAnnotationProcessor.PHASE, AEjbInjectionAnnotationProcessor.PRIORITY, new AEjbInjectionAnnotationProcessor());
+                processorTarget.addDeploymentProcessor(TransactionAnnotationProcessor.PHASE, TransactionAnnotationProcessor.PRIORITY, new TransactionAnnotationProcessor());
             }
         }, OperationContext.Stage.RUNTIME);
         
