@@ -12,9 +12,9 @@ import java.util.Map;
  * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
  */
 
-public class State {
+public class TransactionState {
 
-   private Map<String, State> $nextStates = new Hashtable<String, State>();   // maps: key->State
+   private Map<String, TransactionState> $nextStates = new Hashtable<String, TransactionState>();   // maps: key->State
 
    /**
     * Passed ports
@@ -35,7 +35,7 @@ public class State {
     *    A list containing the names of ports that:
     *        (b) Might be used to complete the transaction
     */
-   public State(String[] passedPorts, String[] futurePorts) {
+   public TransactionState(String[] passedPorts, String[] futurePorts) {
 	   if(passedPorts != null) {
 		   $passedPorts = new ArrayList<String>();
 		   for(String passed:passedPorts)
@@ -55,7 +55,7 @@ public class State {
     * @param next
     *    The destination-tate we go to after the event took place.
     */
-   public void setNextState(String eventName, State next) {
+   public void setNextState(String eventName, TransactionState next) {
       $nextStates.put(eventName, next);
    }
 
@@ -66,8 +66,8 @@ public class State {
     * @return
     *    The new state of our statemachine
     */
-   public State getStateAfterEvent(String eventName) {
-      State s = (State) $nextStates.get(eventName);
+   public TransactionState getStateAfterEvent(String eventName) {
+      TransactionState s = (TransactionState) $nextStates.get(eventName);
       return s;
    }
 

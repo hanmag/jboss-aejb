@@ -11,18 +11,18 @@ import java.util.List;
  */
 
 public class Transaction {
-	private State $currentState;
+	private TransactionState $currentState;
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see artemis.transaction.Tran#init()
 	 */
-	public void init(State initialState) {
+	public void init(TransactionState initialState) {
 		$currentState = initialState;
 	}
 	
-	public State getCurrentState() {
+	public TransactionState getCurrentState() {
 		return $currentState;
 	}
 
@@ -33,7 +33,7 @@ public class Transaction {
 	 */
 	public void trigger(String eventName) {
 		if ($currentState != null) {
-			State next = $currentState.getStateAfterEvent(eventName);
+			TransactionState next = $currentState.getStateAfterEvent(eventName);
 			if (next != null) {
 				$currentState = next;
 			}

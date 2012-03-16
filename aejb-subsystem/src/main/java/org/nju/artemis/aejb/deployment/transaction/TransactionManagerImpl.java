@@ -18,7 +18,7 @@ import org.nju.artemis.aejb.deployment.processors.TransactionManager;
 
 public class TransactionManagerImpl implements TransactionManager {
 	//All states
-	private State[] $states;
+	private TransactionState[] $states;
 	//Transaction name
 	private String $name;
 	// the number of transaction has executed
@@ -32,21 +32,20 @@ public class TransactionManagerImpl implements TransactionManager {
 		return $transactionmethod;
 	}
 
-	public TransactionManagerImpl(String name, String method, String[] portNames, State[] states, Map<String, String>[] nextStates) {
+	public TransactionManagerImpl(String name, String method, String[] portNames, TransactionState[] states, Map<String, String>[] nextStates) {
 		$name = name;
 		$states = states;
 		$transactionmethod = method;
 		$transactions = new HashMap<String,Transaction>();
 		$portNames = portNames;
-		for (int i = 0; i < $states.length; i++) {
+		final int index = $states.length-1;
+		for (int i = 0; i < index; i++) {
 			Map<String, String> table = nextStates[i];
 			Iterator<Entry<String, String>> itrator = table.entrySet().iterator();
 			while(itrator.hasNext()) {
 				Entry<String, String> entry = itrator.next();
 				String eventName = entry.getKey();
-				System.out.println("eventName:"+eventName);
 				String next = entry.getValue();
-				System.out.println("next:"+next);
 				int n = Integer.parseInt(next.substring(1));
 				$states[i].setNextState(eventName, $states[n]);
 			}
