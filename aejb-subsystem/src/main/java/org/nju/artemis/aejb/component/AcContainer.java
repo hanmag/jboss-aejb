@@ -9,6 +9,7 @@ import org.jboss.invocation.Interceptor;
 import org.jboss.logging.Logger;
 import org.nju.artemis.aejb.component.interceptors.DispatcherInterceptor;
 import org.nju.artemis.aejb.component.interceptors.InvocationFilterInterceptor;
+import org.nju.artemis.aejb.deployment.processors.TransactionManager;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
@@ -99,5 +100,9 @@ public class AcContainer {
 	
 	public List<String> getDependencies() {
 		return depndencies;
+	}
+	
+	public void setTransactionManager(TransactionManager tm) {
+		
 	}
 }
