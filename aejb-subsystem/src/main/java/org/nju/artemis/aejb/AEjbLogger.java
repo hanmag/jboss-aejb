@@ -48,4 +48,11 @@ public interface AEjbLogger extends BasicLogger {
     @LogMessage(level = Level.INFO)
     @Message(id = 20003, value = "Remove AEJB Client Service [%s]")
     void removeClientService(String jndi);
+    
+    /**
+     * Logs a message indicating that the aejb transaction manager is bound
+     */
+    @LogMessage(level = Level.INFO)
+    @Message(id = 20004, value = "Bound AEJB Transaction Manager [%s]")
+    void boundTransactionManager(String jndi);
 }
