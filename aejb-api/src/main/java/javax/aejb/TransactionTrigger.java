@@ -14,4 +14,6 @@ public interface TransactionTrigger {
 	 *            The name of the event being triggered
 	 */
 	void trigger(String objectId, String eventName);
+	
+	void trigger(String objectId);
 }
