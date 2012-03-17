@@ -36,7 +36,6 @@ public class ContainerInvocationHandler implements InvocationHandler {
 	
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		final Interceptor interceptor = interceptors.iterator().next();
         final InterceptorContext context = new InterceptorContext();
         // setup interceptors
         context.setInterceptors(interceptors);
@@ -46,7 +45,7 @@ public class ContainerInvocationHandler implements InvocationHandler {
         context.setMethod(method);
         // setup the public context data
         context.setContextData(contextData);
-        return interceptor.processInvocation(context);
+        return context.proceed();
 	}
 
 }
