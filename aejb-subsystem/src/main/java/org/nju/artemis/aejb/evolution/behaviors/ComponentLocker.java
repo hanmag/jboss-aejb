@@ -3,7 +3,7 @@ package org.nju.artemis.aejb.evolution.behaviors;
 import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
-import org.nju.artemis.aejb.evolution.handlers.DependencyHandler;
+import org.nju.artemis.aejb.evolution.handlers.DependencyComputeHandler;
 import org.nju.artemis.aejb.evolution.handlers.StatusShiftHandler;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
@@ -42,7 +42,7 @@ public class ComponentLocker extends EvolutionBehavior{
 	
 	@Override
 	protected void initializeStepHandlers() {
-		handlers.add(new DependencyHandler());
+		handlers.add(new DependencyComputeHandler());
 		handlers.add(new StatusShiftHandler());
 	}
 

@@ -3,7 +3,9 @@ package org.nju.artemis.aejb.evolution.behaviors;
 import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
-import org.nju.artemis.aejb.evolution.handlers.DependencyHandler;
+import org.nju.artemis.aejb.evolution.handlers.DependencyChangeHandler;
+import org.nju.artemis.aejb.evolution.handlers.DependencyComputeHandler;
+import org.nju.artemis.aejb.evolution.handlers.InterceptorSwitchHandler;
 import org.nju.artemis.aejb.evolution.handlers.InterfaceIdentifyHandler;
 
 /**
@@ -32,7 +34,9 @@ public class ComponentSwitcher extends EvolutionBehavior{
 	@Override
 	protected void initializeStepHandlers() {
 		handlers.add(new InterfaceIdentifyHandler());
-		handlers.add(new DependencyHandler());
+		handlers.add(new DependencyComputeHandler());
+		handlers.add(new InterceptorSwitchHandler());
+		handlers.add(new DependencyChangeHandler());
 		// Not need block component
 //		handlers.add(new OperationAlterHandler(ComponentLocker.LOCK));
 //		handlers.add(new ComponentLocker());

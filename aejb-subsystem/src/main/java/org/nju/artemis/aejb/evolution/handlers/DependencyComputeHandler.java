@@ -11,8 +11,8 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
 /**
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
-public class DependencyHandler implements OperationStepHandler {
-	private static final String HANDLER_NAME = "DependencyHandler";
+public class DependencyComputeHandler implements OperationStepHandler {
+	private static final String HANDLER_NAME = "DependencyComputeHandler";
 	
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
