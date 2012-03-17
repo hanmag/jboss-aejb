@@ -78,9 +78,10 @@ public class AnnotatedAEJBComponentDescriptionProcessor implements DeploymentUni
 			String appName = sessionBeanDescription.getApplicationName();
 			String moduleName = sessionBeanDescription.getModuleName();
 			String beanName = sessionBeanDescription.getEJBName();
+			String distinctName = "";
 			SessionBeanType beanType = sessionBeanDescription.getSessionBeanType();
 			
-			AcContainer accon = new AcContainer(appName, moduleName, beanName, beanType);
+			AcContainer accon = new AcContainer(appName, moduleName, beanName, distinctName, beanType);
 			AEjbUtilities.registerAEJB(unitName, accon);
 			aejbInfo.put(beanClass, accon);
 		}

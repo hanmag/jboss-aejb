@@ -63,7 +63,14 @@ Add subsystem:
     <subsystem xmlns="urn:org.nju.artemis.aejb:1.0">
 	<client-service jndi-name="java:global/aejb/client"/>
     </subsystem>
-    
+
+Add global module:
+    <subsystem xmlns="urn:jboss:domain:ee:1.0">
+	<global-modules>
+		<module name="org.nju.artemis.api" slot="main"/>
+	</global-modules>
+    </subsystem>
+
 Server Manager
 ----------------------------
 Change to the bin directory after JBoss start

@@ -90,10 +90,10 @@ public class TransactionManagerImpl implements TransactionManager {
 	 */
 	public void trigger(String objectId, String eventName) {
 		synchronized ($transactions) {
+			if(!$transactions.containsKey(objectId))
+				createTransaction(objectId);
 			Transaction tran = $transactions.get(objectId);
-			if (tran != null) {
-				tran.trigger(eventName);
-			}
+			tran.trigger(eventName);
 		}
 	}
 

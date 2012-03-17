@@ -12,15 +12,18 @@ import org.jboss.ejb.client.EJBLocator;
 import org.jboss.ejb.client.StatelessEJBLocator;
 import org.jboss.invocation.Interceptor;
 import org.jboss.invocation.InterceptorContext;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class DispatcherInterceptor implements Interceptor {
-
+	Logger log = Logger.getLogger(DispatcherInterceptor.class);
 	private Map<String,Object> contextData;
+	
 	@Override
 	public Object processInvocation(InterceptorContext context) throws Exception {
+		log.info("DispatcherInterceptor: processInvocation");
 		contextData = context.getContextData();
 		String appName = (String) contextData.get("appName");
 		String moduleName = (String) contextData.get("moduleName");
@@ -35,7 +38,7 @@ public class DispatcherInterceptor implements Interceptor {
 	private Object dispatch(InterceptorContext context, String appName, String moduleName, String distinctName, String beanName, Class<?> viewClass, boolean stateful){
 		EJBLocator ejbLocator = null;
 		Object result = null;
-		final String proxyName = "Proxy:"+appName+moduleName+beanName+distinctName;
+		final String proxyName = "Proxy:" + appName + moduleName + beanName + distinctName;
 		if(contextData.containsKey(proxyName)) {
 			final Proxy proxy = (Proxy) contextData.get(proxyName);
 	        try {

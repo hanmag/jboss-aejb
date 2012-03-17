@@ -14,7 +14,7 @@ import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
  */
 public class InvocationFilterInterceptor implements Interceptor {
 	Logger log = Logger.getLogger(InvocationFilterInterceptor.class);
-	private AcContainer container;
+	private final AcContainer container;
 	private final InvocationManager manager;
 	
 	public InvocationFilterInterceptor(AcContainer container) {
@@ -25,9 +25,9 @@ public class InvocationFilterInterceptor implements Interceptor {
 	
 	@Override
 	public Object processInvocation(InterceptorContext context)	throws Exception {
+		log.info("InvocationFilterInterceptor: processInvocation");
 		final String targetAEjbName = (String) context.getContextData().get("aejbName");
 		final Map<String, AEjbStatus> status = container.getAEjbStatus();
-		if(status !=null)
 		if(status != null && AEjbStatus.BLOCKING == status.get(targetAEjbName)) {
 			manager.blockInvocation(context, targetAEjbName);
 		}

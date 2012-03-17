@@ -115,8 +115,6 @@ public class AEjbClientImpl implements AEjbClient {
 
 	@Override
 	public String getProtocol(String name) {
-		if(switchMap.containsKey(name))
-			return switchMap.get(name);
-		return null;
+		return switchMap.get(name);
 	}
 }

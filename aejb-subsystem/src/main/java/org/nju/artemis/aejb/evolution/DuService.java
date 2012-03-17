@@ -67,6 +67,7 @@ public class DuService implements Service<DuService> {
 	}
 
 	private void manageAEjbState(Map<String, AEjbStatus> aejbStatus) {
+		// simple
 		getAEjbUtilities().setAEjbStatus(aejbStatus);
 	}
 

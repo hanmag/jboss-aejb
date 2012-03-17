@@ -14,7 +14,6 @@ import org.jboss.logging.Logger;
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class ContainerInvocationHandler implements InvocationHandler {
-
 	Logger log = Logger.getLogger(ContainerInvocationHandler.class);
 	
 	private final Map<String,Object> contextData;

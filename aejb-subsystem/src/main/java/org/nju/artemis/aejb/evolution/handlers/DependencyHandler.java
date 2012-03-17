@@ -12,11 +12,12 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class DependencyHandler implements OperationStepHandler {
-
+	private static final String HANDLER_NAME = "DependencyHandler";
+	
 	@Override
-	public void execute(OperationContext context) throws OperationFailedException {
+	public OperationResult execute(OperationContext context) throws OperationFailedException {
 		AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
-		String targetName = (String) context.getContextData().get("targetName");
+		String targetName = context.getTargetName();
 		if(utilities == null || targetName == null)
 			throw new OperationFailedException("Don't have enough resources to compute neighbors.");
 		List<String> neighbors = new ArrayList<String>();
@@ -27,5 +28,11 @@ public class DependencyHandler implements OperationStepHandler {
 			}
 		}
 		context.getContextData().put("neighbors", neighbors);
+		return OperationResult.Expected;
+	}
+
+	@Override
+	public String getHandlerName() {
+		return HANDLER_NAME;
 	}
 }
