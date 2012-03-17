@@ -160,4 +160,9 @@ public class TransactionManagerImpl implements TransactionManager {
 		}
 		return null;
 	}
+
+	@Override
+	public void trigger(String objectId) {
+		// TODO End transaction method stub
+	}
 }
