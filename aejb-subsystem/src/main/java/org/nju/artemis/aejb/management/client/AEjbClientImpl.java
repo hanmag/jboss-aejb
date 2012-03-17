@@ -117,4 +117,10 @@ public class AEjbClientImpl implements AEjbClient {
 	public String getProtocol(String name) {
 		return switchMap.get(name);
 	}
+
+	@Override
+	public boolean replaceAEjb(String fromName, String toName, String protocol) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

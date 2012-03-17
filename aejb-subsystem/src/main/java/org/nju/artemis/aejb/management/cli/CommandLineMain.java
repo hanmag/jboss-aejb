@@ -102,10 +102,13 @@ public class CommandLineMain {
 							return new DeploymentFileNameInput();
 						case 'd':
 						case 'D':
-							return new AEjbNameInput(true);
+							return new AEjbBlocker(new AEjbNameInput());
 						case 'e':
 						case 'E':
-							return new AEjbNameInput(false);
+							return new AEjbRecorver(new AEjbNameInput());
+						case 'g':
+						case 'G':
+							return new AEjbSwitcher(new AEjbNameInput());
 						}
 					}
 					theConsole.printf(ManagementMessages.UnexpectedCommandPrompt + SPACE + "'" + temp + "'.");
@@ -173,13 +176,17 @@ public class CommandLineMain {
      * Input aejb name.
      */
     private class AEjbNameInput implements State {
-
-    	boolean passivate;
+    	private String aejbName;
+    	private String prompt;
     	
-        private AEjbNameInput(boolean passivate) {
-        	this.passivate = passivate;
-        }
-
+    	public String getAEjbName() {
+    		return aejbName;
+    	}
+    	
+    	public void setPrompt(String prompt) {
+    		this.prompt = prompt;
+    	}
+    	
         @Override
         public State execute() {
         	theConsole.printf(NEW_LINE);
@@ -187,31 +194,77 @@ public class CommandLineMain {
             theConsole.printf(NEW_LINE);
             
             while (true) {
-                String temp = theConsole.readLine("[aejbname /]: ");
+            	String temp;
+            	if(prompt == null)
+            		temp = theConsole.readLine("[aejbname /]: ");
+            	else
+            		temp = theConsole.readLine("[" + prompt + " /]: ");
                 if (temp == null) {
                     theConsole.printf(NEW_LINE);
                     return null;
                 }
                 if (temp.length() > 0) {
-                	if(passivate)
-                		return new AEjbBlocker(temp);
-                	else 
-                		return new AEjbRecorver(temp);
+                	aejbName = temp;
+                	return null;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Input protocol name.
+     */
+    private class ProtocolNameInput implements State {
+    	private String protocol;
+    	
+    	public String getProtocol() {
+    		return protocol;
+    	}
+    	
+        @Override
+        public State execute() {
+        	theConsole.printf(NEW_LINE);
+            theConsole.printf(ManagementMessages.ProtocolPrompt);
+            theConsole.printf(NEW_LINE);
+
+            while (true) {
+                String temp = theConsole.readLine("[choose /]: ");
+                if (temp == null) {
+                    theConsole.printf(NEW_LINE);
+                    return null;
+                }
+                if (temp.length() > 0) {
+					if (temp.length() == 1) {
+						switch (temp.charAt(0)) {
+						case 'a':
+						case 'A':
+							protocol = "quiescence";
+							return null;
+						case 'b':
+						case 'B':
+							protocol = "tranquility";
+							return null;
+						}
+					}
+					theConsole.printf(ManagementMessages.UnexpectedCommandPrompt + SPACE + "'" + temp + "'.");
+					theConsole.printf(NEW_LINE);
                 }
             }
         }
     }
     
     private class AEjbBlocker implements State {
-
-    	String aejbName;
+    	final AEjbNameInput input;
     	
-        private AEjbBlocker(String aejbName) {
-        	this.aejbName = aejbName;
+        private AEjbBlocker(AEjbNameInput input) {
+        	this.input = input;
         }
         
 		@Override
 		public State execute() {
+			input.execute();
+			final String aejbName = input.getAEjbName();
+			
 			boolean exsit = false;
 			try {
 				exsit = blockAEjb(aejbName);
@@ -232,15 +285,17 @@ public class CommandLineMain {
     }
     
     private class AEjbRecorver implements State {
-
-    	String aejbName;
+    	final AEjbNameInput input;
     	
-        private AEjbRecorver(String aejbName) {
-        	this.aejbName = aejbName;
+        private AEjbRecorver(AEjbNameInput input) {
+        	this.input = input;
         }
         
 		@Override
 		public State execute() {
+			input.execute();
+			final String aejbName = input.getAEjbName();
+			
 			boolean exsit = false;
 			try {
 				exsit = recorverAEjb(aejbName);
@@ -257,6 +312,44 @@ public class CommandLineMain {
 	            return new FunctionPrompt();
 			}
 			return new AEjbResponseWaiting(aejbName);
+		}
+    }
+    
+    private class AEjbSwitcher implements State {
+    	final AEjbNameInput input;
+    	
+        private AEjbSwitcher(AEjbNameInput input) {
+        	this.input = input;
+        }
+        
+		@Override
+		public State execute() {
+			input.setPrompt("switch from aejb name");
+			input.execute();
+			final String fromName = input.getAEjbName();
+			input.setPrompt("switch to aejb name");
+			input.execute();
+			final String toName = input.getAEjbName();
+			ProtocolNameInput protocolInput = new ProtocolNameInput();
+			protocolInput.execute();
+			final String protocol = protocolInput.getProtocol();
+			
+			boolean exsit = false;
+			try {
+				exsit = switchAEjb(fromName, toName, protocol);
+			} catch (Exception e) {
+				theConsole.printf(NEW_LINE);
+				theConsole.printf("## ");
+				theConsole.printf(e.getMessage());
+				return new ErrorState(ManagementMessages.NotConnectServer, new FunctionPrompt());
+			}
+			if(exsit == false) {
+				theConsole.printf(NEW_LINE);
+	        	theConsole.printf(ManagementMessages.AEjbNotExist);
+	            theConsole.printf(NEW_LINE);
+	            return new FunctionPrompt();
+			}
+			return new SuccessState(ManagementMessages.OperationSuccess, new FunctionPrompt());
 		}
     }
     
@@ -302,10 +395,7 @@ public class CommandLineMain {
 			if(status != null)
 				return new ErrorState(ManagementMessages.OperationFailed, new FunctionPrompt());
 			
-			theConsole.printf(NEW_LINE);
-			theConsole.printf(ManagementMessages.OperationSuccess);
-			theConsole.printf(NEW_LINE);
-			return new FunctionPrompt();
+			return new SuccessState(ManagementMessages.OperationSuccess, new FunctionPrompt());
 		}
     }
     
@@ -355,7 +445,7 @@ public class CommandLineMain {
 				FileOperations.copyFile(deployment, jbossHome + "/standalone/deployments/" + deployment.getName());
 			}
 			
-			return new FunctionPrompt();
+			return new SuccessState(ManagementMessages.OperationSuccess, new FunctionPrompt());
         }
     }
     
@@ -443,6 +533,36 @@ public class CommandLineMain {
 		}
     }
     
+    private class SuccessState implements State {
+
+        private final State nextState;
+        private final String sMessage;
+
+        private SuccessState(String sMessage) {
+            this(sMessage, null);
+        }
+
+        private SuccessState(String sMessage, State nextState) {
+            this.sMessage = sMessage;
+            this.nextState = nextState;
+        }
+
+        @Override
+        public State execute() {
+			theConsole.printf(NEW_LINE);
+			theConsole.printf(" * Success * ");
+			theConsole.printf(NEW_LINE);
+			theConsole.printf(sMessage);
+			theConsole.printf(NEW_LINE);
+			try {
+				Thread.sleep(2500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return nextState;
+		}
+    }
+    
     private class ConnectState implements State {
 
 		@Override
@@ -474,6 +594,10 @@ public class CommandLineMain {
 		}
     }
     
+    private static boolean switchAEjb(String fromName, String toName, String protocol) throws Exception {
+    	return getAndManageClientEjb(fromName, toName, "switchAEjb", protocol);
+    }
+    
     private static boolean blockAEjb(String aejbName) throws Exception {
     	return getAndManageClientEjb(aejbName, "blockAEjb");
     }
@@ -488,7 +612,7 @@ public class CommandLineMain {
     }
     
     private static Map<String,String[]> getAllDeploymentsInfo() throws Exception {
-    	// This version do not support remoting JNDI...
+    	// This version does not support remoting JNDI...
 //    	Hashtable env = new Hashtable();
 //    	env.put("java.naming.factory.url.pkgs", "org.jboss.as.naming.interfaces:org.jboss.ejb.client.namings");
 //    	InitialContext initCtx = new InitialContext(env);
@@ -513,6 +637,15 @@ public class CommandLineMain {
 		Object remoteClient = context.lookup(CLIENT_EJB_JNDI);
 		Method method = getClientMethod(remoteClient, methodName);
 		return (Boolean) method.invoke(remoteClient, aejbName);
+	}
+	
+	private static boolean getAndManageClientEjb(String fromName, String toName, String methodName, String protocol) throws Exception {
+		final Hashtable jndiProperties = new Hashtable();
+		jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+		final Context context = new InitialContext(jndiProperties);
+		Object remoteClient = context.lookup(CLIENT_EJB_JNDI);
+		Method method = getClientMethod(remoteClient, methodName);
+		return (Boolean) method.invoke(remoteClient, fromName, toName, protocol);
 	}
 	
 	private static Method getClientMethod(Object remoteClient, String methodName) {

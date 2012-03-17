@@ -90,4 +90,29 @@ public class AEjbClientBean implements AEjbClient {
 		}
 		return false;
 	}
+
+	@Override
+	public boolean switchAEjb(String fromName, String toName, String protocol) {
+		getOrCreateAEjbClient();
+		try {
+			return (Boolean) client.getClass().getDeclaredMethod("switchAEjb", String.class, String.class, String.class).invoke(client, fromName, toName, protocol);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	@Override
+	public boolean replaceAEjb(String fromName, String toName, String protocol) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

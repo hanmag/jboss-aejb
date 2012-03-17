@@ -29,4 +29,6 @@ public interface AEjbClient extends Serializable{
 	Map<String, String> getSwitchMap();
 	
 	String getProtocol(String name);
+	
+	boolean replaceAEjb(String fromName, String toName, String protocol);
 }

@@ -11,4 +11,8 @@ public interface AEjbClient {
 	boolean blockAEjb(String aejbName);
 	
 	boolean resumeAEjb(String aejbName);
+	
+	boolean switchAEjb(String fromName, String toName, String protocol);
+	
+	boolean replaceAEjb(String fromName, String toName, String protocol);
 }

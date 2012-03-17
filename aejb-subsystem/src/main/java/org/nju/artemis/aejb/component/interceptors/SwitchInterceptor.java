@@ -21,7 +21,7 @@ public class SwitchInterceptor implements Interceptor {
 
 	@Override
 	public Object processInvocation(InterceptorContext context) throws Exception {
-		log.info("SwitchInterceptor: SwitchInterceptor");
+		log.info("SwitchInterceptor: processInvocation");
 		Map<String,Object> contextData = context.getContextData();
 		String aejbName = (String) contextData.get("aejbName");
 		AcContainer con = container.getSwitchMap().get(aejbName);

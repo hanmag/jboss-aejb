@@ -34,9 +34,11 @@ public interface ManagementMessages {
 	
 	String OperationTimeOutFailed = "The operation to AEjb time out failed.";
 	
-	String OperationSuccess = "The operation to AEjb success.";
+	String OperationSuccess = "The operation to AEjb completed.";
 	
 	String ConnectPrompt = "You are disconnected at the moment. Type 'connect' to connect to the server.";
+	
+	String ProtocolPrompt = "What type of protocol do you wish to ues? \n a) quiescence \n b) tranquility";
 	
 	String UnexpectedCommandPrompt = "Unexpected command";
 }
