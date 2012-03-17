@@ -1,6 +1,8 @@
 package org.nju.artemis.aejb.evolution;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.logging.Logger;
@@ -11,6 +13,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.nju.artemis.aejb.component.AEjbUtilities;
+import org.nju.artemis.aejb.evolution.behaviors.ComponentSwitcher;
 import org.nju.artemis.aejb.management.client.AEjbClient;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
@@ -50,7 +53,7 @@ public class DuService implements Service<DuService> {
                     }
                     Map<String, String> switchMap = getAEjbClient().getSwitchMap();
                     if(!switchMap.isEmpty()) {
-//                    	manageAEjbSwitch(switchMap);
+                    	manageAEjbSwitch(switchMap);
                     	getAEjbClient().clearSwitchMap();
                     }
                 } catch (InterruptedException e) {
@@ -71,6 +74,23 @@ public class DuService implements Service<DuService> {
 		getAEjbUtilities().setAEjbStatus(aejbStatus);
 	}
 
+	private void manageAEjbSwitch(Map<String, String> switchMap) {
+		Iterator<Entry<String, String>> iterator = switchMap.entrySet().iterator();
+		while(iterator.hasNext()) {
+			Entry<String, String> entry = iterator.next();
+			String fromName = entry.getKey();
+			String toName = entry.getValue();
+			OperationContext context = new OperationContext(null, fromName);
+			context.getContextData().put(AEjbUtilities.class, getAEjbUtilities());
+			try {
+				new ComponentSwitcher(fromName, toName, getAEjbClient().getProtocol(fromName)).execute(context);
+			} catch (OperationFailedException e) {
+				log.warn(e.getMessage());
+				log.info("Evolution: " + fromName + " switch to " + toName + " failed.");
+			}
+		}
+	}
+	
 	@Override
 	public void stop(StopContext context) {
 		AEJBCLIENT.interrupt();

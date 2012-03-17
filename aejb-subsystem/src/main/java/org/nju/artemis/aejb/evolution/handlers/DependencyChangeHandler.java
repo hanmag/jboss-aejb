@@ -6,30 +6,26 @@ import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.component.AcContainer;
 import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
-import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
- * Recommand after DependencyHandler
- * 
- * @author <a href="wangjue1199@gmail.com">Jason</a>
+ * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
  */
-public class StatusShiftHandler implements OperationStepHandler {
-	private static final String HANDLER_NAME = "StatusShiftHandler";
+public class DependencyChangeHandler implements OperationStepHandler {
+	private static final String HANDLER_NAME = "DependencyChangeHandler";
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
 		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
 		final List<String> neighbors = (List<String>) context.getContextData().get("neighbors");
 		final String targetName = context.getTargetName();
-		final AEjbStatus status = (AEjbStatus) context.getContextData().get(AEjbStatus.class);
+		final String toName = (String) context.getContextData().get("toName");
 		if(neighbors == null)
-			throw new OperationFailedException("Neighbors is null, failed to shift status.");
+			throw new OperationFailedException("Neighbors is null, failed to change dependency.");
 		for(String aejbName:neighbors) {
 			AcContainer con = utilities.getContainer(aejbName);
 			if(con == null)
 				throw new OperationFailedException("Can not find neighbor's container: " + aejbName + ".");
-			con.setAEjbStatus(targetName, status);
+			con.changeDependencies(targetName, toName);
 		}
 		return OperationResult.Expected;
 	}
@@ -38,4 +34,5 @@ public class StatusShiftHandler implements OperationStepHandler {
 	public String getHandlerName() {
 		return HANDLER_NAME;
 	}
+
 }

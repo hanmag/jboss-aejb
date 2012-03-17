@@ -37,6 +37,8 @@ public class AcContainer {
 	private Class<?> localView, remoteView;
 	//switch map
 	private Map<String, AcContainer> switchMap = new HashMap<String, AcContainer>();
+	//protocols
+	private Map<String, String> protocols = new HashMap<String, String>();
 
 	public AcContainer(String appName, String moduleName, String beanName, String distinctName, SessionBeanType beanType) {
 		this.appName = appName;
@@ -88,6 +90,8 @@ public class AcContainer {
 		aejbStatus = null;
 		switchMap.clear();
 		switchMap = null;
+		depndencies.clear();
+		depndencies = null;
 		
 		log.info("Stop AcContainer, AEJBName = " + aejbName);
 	}
@@ -121,7 +125,14 @@ public class AcContainer {
 	public void addDepndencies(String aejbName) {
 		if(depndencies == null)
 			depndencies = new ArrayList<String>();
+		if(depndencies.contains(aejbName))
+			depndencies.remove(aejbName);
 		depndencies.add(aejbName);
+	}
+	
+	public void changeDependencies(String oldD, String newD) {
+		addDepndencies(newD);
+		depndencies.remove(oldD);
 	}
 	
 	public List<String> getDependencies() {
@@ -162,5 +173,13 @@ public class AcContainer {
 	
 	public void addSwitchMap(String from, AcContainer toContainer) {
 		this.switchMap.put(from, toContainer);
+	}
+	
+	public Map<String, String> getProtocols() {
+		return protocols;
+	}
+
+	public void addProtocol(String name, String protocol) {
+		this.protocols.put(name, protocol);
 	}
 }

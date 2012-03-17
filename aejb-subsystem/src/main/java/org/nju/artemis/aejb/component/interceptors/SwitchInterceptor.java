@@ -26,15 +26,24 @@ public class SwitchInterceptor implements Interceptor {
 		String aejbName = (String) contextData.get("aejbName");
 		AcContainer con = container.getSwitchMap().get(aejbName);
 		if(con != null && !con.getAEJBName().equals(aejbName)) {
-			contextData.put("appName", con.getApplicationName());
-			contextData.put("moduleName", con.getModuleName());
-			contextData.put("beanName", con.getBeanName());
-			contextData.put("distinctName", con.getDistinctName());
-			contextData.put("aejbName", con.getAEJBName());
-			contextData.put("viewClass", con.getRemoteView() == null ? con.getRemoteView() : con.getLocalView());
-			contextData.put("stateful", con.getBeanType() == SessionBeanType.STATEFUL);
+			String protocol = container.getProtocols().get(aejbName);
+			if(protocol != null && isValidProtocolName(protocol)) {
+				String objectId = context.getPrivateData(Object.class).toString();
+				log.info("objectId = " + objectId);
+				
+				contextData.put("appName", con.getApplicationName());
+				contextData.put("moduleName", con.getModuleName());
+				contextData.put("beanName", con.getBeanName());
+				contextData.put("distinctName", con.getDistinctName());
+				contextData.put("aejbName", con.getAEJBName());
+				contextData.put("viewClass", con.getRemoteView() == null ? con.getRemoteView() : con.getLocalView());
+				contextData.put("stateful",	con.getBeanType() == SessionBeanType.STATEFUL);
+			}
 		}
 		return context.proceed();
 	}
 
+	private boolean isValidProtocolName(String protocol) {
+		return protocol.equals("tranquility") || protocol.equals("quiescence");
+	}
 }

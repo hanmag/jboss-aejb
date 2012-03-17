@@ -52,8 +52,8 @@ public class InterfaceIdentifyHandler implements OperationStepHandler {
 						if (!method1.getReturnType().equals(method2.getReturnType()))
 							continue;
 						/* Avoid unnecessary cloning */
-						Class[] params1 = method1.getParameterTypes();
-						Class[] params2 = method2.getParameterTypes();
+						Class<?>[] params1 = method1.getParameterTypes();
+						Class<?>[] params2 = method2.getParameterTypes();
 						if (params1.length == params2.length) {
 							int i;
 							for (i = 0; i < params1.length; i++) {
