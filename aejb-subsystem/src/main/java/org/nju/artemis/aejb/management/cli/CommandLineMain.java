@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.nju.artemis.aejb.management.client.AEjbClient;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
@@ -35,6 +36,17 @@ public class CommandLineMain {
 	FilenameTabCompleter pathCompleter;
 	static final String CLIENT_EJB_JNDI = "ejb:" + "/" + "aejb-client" + "/" + "/" + "AEjbClientBean" + "!" + "org.nju.artemis.aejb.client.AEjbClient";
 	static AEjbClient client;
+	static Context context;
+	
+	static {
+		final Hashtable jndiProperties = new Hashtable();
+		jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+		try {
+			context = new InitialContext(jndiProperties);
+		} catch (NamingException e) {
+		}
+	}
+	
 	
 	private CommandLineMain(){
 		if (theConsole == null) {
@@ -330,6 +342,8 @@ public class CommandLineMain {
 			input.setPrompt("switch to aejb name");
 			input.execute();
 			final String toName = input.getAEjbName();
+			if(fromName.equals(toName))
+				return new ErrorState(ManagementMessages.UnexpectedSameName, new FunctionPrompt());
 			ProtocolNameInput protocolInput = new ProtocolNameInput();
 			protocolInput.execute();
 			final String protocol = protocolInput.getProtocol();
@@ -622,27 +636,18 @@ public class CommandLineMain {
     }
     
 	private static void getAndInvokeClientEjb() throws Exception {
-		final Hashtable jndiProperties = new Hashtable();
-		jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-		final Context context = new InitialContext(jndiProperties);
 		Object remoteClient = context.lookup(CLIENT_EJB_JNDI);
 		Method method = getClientMethod(remoteClient, "getAEjbClient");
 		client = (AEjbClient) method.invoke(remoteClient);
 	}
 	
 	private static boolean getAndManageClientEjb(String aejbName, String methodName) throws Exception {
-		final Hashtable jndiProperties = new Hashtable();
-		jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-		final Context context = new InitialContext(jndiProperties);
 		Object remoteClient = context.lookup(CLIENT_EJB_JNDI);
 		Method method = getClientMethod(remoteClient, methodName);
 		return (Boolean) method.invoke(remoteClient, aejbName);
 	}
 	
 	private static boolean getAndManageClientEjb(String fromName, String toName, String methodName, String protocol) throws Exception {
-		final Hashtable jndiProperties = new Hashtable();
-		jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-		final Context context = new InitialContext(jndiProperties);
 		Object remoteClient = context.lookup(CLIENT_EJB_JNDI);
 		Method method = getClientMethod(remoteClient, methodName);
 		return (Boolean) method.invoke(remoteClient, fromName, toName, protocol);
