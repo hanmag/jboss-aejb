@@ -28,7 +28,7 @@ public class TransactionManagerImpl implements TransactionManager {
 	private String[] $portNames;
 	private String $transactionmethod;
 
-	public String getTransactionmethodName() {
+	public String getTransactionMethodName() {
 		return $transactionmethod;
 	}
 
@@ -82,6 +82,15 @@ public class TransactionManagerImpl implements TransactionManager {
 	public boolean isActive() {
 		return getRunNumber() != 0;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see artemis.transaction.Tran#isActive(java.lang.String)
+	 */
+	public boolean isActive(String objectId) {
+		return $transactions.containsKey(objectId);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -128,7 +137,7 @@ public class TransactionManagerImpl implements TransactionManager {
 
 	public void destroyTransaction(String objectId){
 		$transactions.remove(objectId);
-		$runNumber++;
+		$runNumber--;
 	}
 
 	/**
@@ -163,6 +172,10 @@ public class TransactionManagerImpl implements TransactionManager {
 
 	@Override
 	public void trigger(String objectId) {
-		// TODO End transaction method stub
+		synchronized ($transactions) {
+			if(!$transactions.containsKey(objectId))
+				return;
+			destroyTransaction(objectId);
+		}
 	}
 }
