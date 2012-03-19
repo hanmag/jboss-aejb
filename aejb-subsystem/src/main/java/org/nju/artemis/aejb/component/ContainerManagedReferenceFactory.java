@@ -43,6 +43,7 @@ public class ContainerManagedReferenceFactory implements ManagedReferenceFactory
         this.viewClassLoader = viewClassLoader;
         this.stateful = stateful;
         this.container = container;
+        this.container.addOriginDepndencies(moduleName + '/' + beanName);
     }
     
 	@Override
