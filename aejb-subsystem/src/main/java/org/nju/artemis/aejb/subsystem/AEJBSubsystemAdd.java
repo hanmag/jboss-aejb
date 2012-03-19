@@ -17,6 +17,7 @@ import org.nju.artemis.aejb.AEjbLogger;
 import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.deployment.processors.AEjbInjectionAnnotationProcessor;
 import org.nju.artemis.aejb.deployment.processors.AnnotatedAEJBComponentDescriptionProcessor;
+import org.nju.artemis.aejb.deployment.processors.BusinessViewProcessor;
 import org.nju.artemis.aejb.deployment.processors.SubsystemDeploymentProcessor;
 import org.nju.artemis.aejb.deployment.processors.TransactionAnnotationProcessor;
 import org.nju.artemis.aejb.evolution.DuService;
@@ -51,10 +52,11 @@ public class AEJBSubsystemAdd extends AbstractBoottimeAddStepHandler {
                 processorTarget.addDeploymentProcessor(AnnotatedAEJBComponentDescriptionProcessor.PHASE, AnnotatedAEJBComponentDescriptionProcessor.PRIORITY, new AnnotatedAEJBComponentDescriptionProcessor());
                 processorTarget.addDeploymentProcessor(AEjbInjectionAnnotationProcessor.PHASE, AEjbInjectionAnnotationProcessor.PRIORITY, new AEjbInjectionAnnotationProcessor());
                 processorTarget.addDeploymentProcessor(TransactionAnnotationProcessor.PHASE, TransactionAnnotationProcessor.PRIORITY, new TransactionAnnotationProcessor());
+                processorTarget.addDeploymentProcessor(BusinessViewProcessor.POST_MODULE, BusinessViewProcessor.PRIORITY, new BusinessViewProcessor());
             }
         }, OperationContext.Stage.RUNTIME);
         
-        TrackerService service = new TrackerService(JAR_FILE_EXTENSION, 60000/*model.get("tick").asLong()*/);
+        TrackerService service = new TrackerService(JAR_FILE_EXTENSION, 180000/*model.get("tick").asLong()*/);
         ServiceName name = TrackerService.createServiceName(JAR_FILE_EXTENSION);
         ServiceController<TrackerService> controller = context.getServiceTarget()
                 .addService(name, service).addListener(verificationHandler)
