@@ -1,6 +1,7 @@
 package org.nju.artemis.aejb.component.interceptors;
 
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ejb.EJBHome;
@@ -15,15 +16,18 @@ import org.jboss.invocation.InterceptorContext;
 import org.jboss.logging.Logger;
 
 /**
+ * This interceptor find the target AEjb and create, invoke proxy.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class DispatcherInterceptor implements Interceptor {
 	Logger log = Logger.getLogger(DispatcherInterceptor.class);
 	private Map<String,Object> contextData;
+	private Map<String,Object> proxyMap = new HashMap<String,Object>();;
 	
 	@Override
 	public Object processInvocation(InterceptorContext context) throws Exception {
-		log.info("DispatcherInterceptor: processInvocation");
+		log.info("DispatcherInterceptor: start process invocation");
 		contextData = context.getContextData();
 		String appName = (String) contextData.get("appName");
 		String moduleName = (String) contextData.get("moduleName");
@@ -38,9 +42,10 @@ public class DispatcherInterceptor implements Interceptor {
 	private Object dispatch(InterceptorContext context, String appName, String moduleName, String distinctName, String beanName, Class<?> viewClass, boolean stateful){
 		EJBLocator ejbLocator = null;
 		Object result = null;
-		final String proxyName = "Proxy:" + appName + moduleName + beanName + distinctName;
-		if(contextData.containsKey(proxyName)) {
-			final Proxy proxy = (Proxy) contextData.get(proxyName);
+		final String proxyName = "Proxy:" + appName + "/" + moduleName + "/" + beanName + "/" + distinctName + "/" + viewClass + "/" + stateful;
+		log.info(proxyName);
+		if(proxyMap.containsKey(proxyName)) {
+			final Proxy proxy = (Proxy) proxyMap.get(proxyName);
 	        try {
 				result = proxy.getInvocationHandler(proxy).invoke(proxy, context.getMethod(), context.getParameters());
 			} catch (IllegalArgumentException e) {
@@ -48,6 +53,7 @@ public class DispatcherInterceptor implements Interceptor {
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
+	        log.info("DispatcherInterceptor: stop process invocation");
 	        return result;
 		}
 		if (EJBHome.class.isAssignableFrom(viewClass) || EJBLocalHome.class.isAssignableFrom(viewClass)) {
@@ -69,7 +75,8 @@ public class DispatcherInterceptor implements Interceptor {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-        context.getContextData().put(proxyName, proxy);
+        proxyMap.put(proxyName, proxy);
+        log.info("DispatcherInterceptor: stop process invocation.");
         return result;
 	}
 }
