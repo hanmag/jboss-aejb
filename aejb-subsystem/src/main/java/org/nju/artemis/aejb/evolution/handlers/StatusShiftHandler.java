@@ -29,7 +29,7 @@ public class StatusShiftHandler implements OperationStepHandler {
 			AcContainer con = utilities.getContainer(aejbName);
 			if(con == null)
 				throw new OperationFailedException("Can not find neighbor's container: " + aejbName + ".");
-			con.setAEjbStatus(targetName, status);
+			con.getEvolutionStatistics().setAEjbStatus(targetName, status);
 		}
 		return OperationResult.Expected;
 	}
