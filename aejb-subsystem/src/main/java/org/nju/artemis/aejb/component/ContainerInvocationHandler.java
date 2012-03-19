@@ -31,7 +31,6 @@ public class ContainerInvocationHandler implements InvocationHandler {
 		contextData.put("stateful", stateful);
 		contextData.put("aejbName", aejbName);
 		this.interceptors = container.getInterceptors();
-		container.addDepndencies(aejbName);
 	}
 	
 	@Override
