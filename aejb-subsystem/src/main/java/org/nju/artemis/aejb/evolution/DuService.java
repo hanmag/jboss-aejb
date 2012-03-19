@@ -14,10 +14,17 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.evolution.behaviors.ComponentSwitcher;
+import org.nju.artemis.aejb.evolution.protocols.Protocol;
+import org.nju.artemis.aejb.evolution.protocols.QuiescenceProtocol;
+import org.nju.artemis.aejb.evolution.protocols.TranquilityProtocol;
 import org.nju.artemis.aejb.management.client.AEjbClient;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
+ * This is the core driven service of AEjb evolution online. Monitor AEjb client and 
+ * create the corresponding evolution behavior.Supply different protocols to check transaction
+ * security.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class DuService implements Service<DuService> {
@@ -25,7 +32,8 @@ public class DuService implements Service<DuService> {
 	public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("aejb", "duservice");
 	private final InjectedValue<AEjbClient> aejbClientValue = new InjectedValue<AEjbClient>();
 	private final InjectedValue<AEjbUtilities> aejbUtilitiesValue = new InjectedValue<AEjbUtilities>();
-	private final AtomicLong tick = new AtomicLong(2000);
+	// decided by different system
+	private final AtomicLong tick = new AtomicLong(2500);
 	
 	@Override
 	public DuService getValue() throws IllegalStateException, IllegalArgumentException {
@@ -40,7 +48,7 @@ public class DuService implements Service<DuService> {
 		return aejbUtilitiesValue.getValue();
 	}
 
-	private Thread AEJBCLIENT = new Thread() {
+	private Thread CLIENT_MONITOR = new Thread() {
         @Override
         public void run() {
             while (true) {
@@ -66,11 +74,11 @@ public class DuService implements Service<DuService> {
     
 	@Override
 	public void start(StartContext context) throws StartException {
-		AEJBCLIENT.start();
+		CLIENT_MONITOR.start();
 	}
 
 	private void manageAEjbState(Map<String, AEjbStatus> aejbStatus) {
-		// simple
+		// simple implementation
 		getAEjbUtilities().setAEjbStatus(aejbStatus);
 	}
 
@@ -86,14 +94,14 @@ public class DuService implements Service<DuService> {
 				new ComponentSwitcher(fromName, toName, getAEjbClient().getProtocol(fromName)).execute(context);
 			} catch (OperationFailedException e) {
 				log.warn(e.getMessage());
-				log.info("Evolution: " + fromName + " switch to " + toName + " failed.");
+				log.info("#Evolution: " + fromName + " switch to " + toName + " failed.");
 			}
 		}
 	}
 	
 	@Override
 	public void stop(StopContext context) {
-		AEJBCLIENT.interrupt();
+		CLIENT_MONITOR.interrupt();
 	}
 
 	public InjectedValue<AEjbClient> getAejbClientValue() {
@@ -104,4 +112,12 @@ public class DuService implements Service<DuService> {
 		return aejbUtilitiesValue;
 	}
 
+	public static Protocol getProtocol(String protocolName) {
+		if("quiescence".equals(protocolName)) {
+			return new QuiescenceProtocol();
+		} else if("tranquility".equals(protocolName)) {
+			return new TranquilityProtocol();
+		}
+		return  null;
+	}
 }
