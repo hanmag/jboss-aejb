@@ -9,6 +9,8 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
 import org.nju.artemis.aejb.evolution.handlers.OperationStepHandler;
 
 /**
+ * Evolution behavior, composed by some simple handlers.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public abstract class EvolutionBehavior implements OperationStepHandler{
