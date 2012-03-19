@@ -15,6 +15,8 @@ import org.jboss.msc.service.StopContext;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
+ * This service manages all AEJBs in server.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class AEjbUtilities implements Service<AEjbUtilities>{
@@ -61,7 +63,7 @@ public class AEjbUtilities implements Service<AEjbUtilities>{
 			Map<String, AcContainer> mapValue = entry.getValue();
 			for(Entry<String, AcContainer> en:mapValue.entrySet()) {
 				Map<String, AEjbStatus> status = new HashMap<String, AEjbStatus>(aejbStatus);
-				en.getValue().setAEjbStatus(status);
+				en.getValue().getEvolutionStatistics().setAEjbStatus(status);
 			}
 		}
 	}
