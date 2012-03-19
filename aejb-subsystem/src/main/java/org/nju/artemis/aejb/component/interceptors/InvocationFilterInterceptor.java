@@ -10,6 +10,8 @@ import org.nju.artemis.aejb.component.AcContainer;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
+ * This interceptor can cache and filter the invocation.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class InvocationFilterInterceptor implements Interceptor {
@@ -20,17 +22,18 @@ public class InvocationFilterInterceptor implements Interceptor {
 	public InvocationFilterInterceptor(AcContainer container) {
 		this.container = container;
 		manager = new InvocationManager();
-		this.container.addStatusListener(new AEjbStatusListener(manager));
+		this.container.getEvolutionStatistics().addStatusListener(new AEjbStatusListener(manager));
 	}
 	
 	@Override
 	public Object processInvocation(InterceptorContext context)	throws Exception {
-		log.info("InvocationFilterInterceptor: processInvocation");
+		log.info("InvocationFilterInterceptor: start processing invocation");
 		final String targetAEjbName = (String) context.getContextData().get("aejbName");
-		final Map<String, AEjbStatus> status = container.getAEjbStatus();
+		final Map<String, AEjbStatus> status = container.getEvolutionStatistics().getAEjbStatus();
 		if(status != null && AEjbStatus.BLOCKING == status.get(targetAEjbName)) {
 			manager.blockInvocation(context, targetAEjbName);
 		}
+		log.info("InvocationFilterInterceptor: stop processing invocation");
 		return context.proceed();
 	}
 	
