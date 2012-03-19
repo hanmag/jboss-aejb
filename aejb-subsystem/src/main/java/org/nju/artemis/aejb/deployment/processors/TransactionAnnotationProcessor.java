@@ -50,6 +50,7 @@ public class TransactionAnnotationProcessor implements DeploymentUnitProcessor {
 	
 	@Override
 	public void deploy(DeploymentPhaseContext phaseContext)	throws DeploymentUnitProcessingException {
+		log.debug("TransactionAnnotationProcessor ===> deploy phaseContext");
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         final Map<String,AcContainer> aejbInfo = deploymentUnit.getAttachment(org.nju.artemis.aejb.deployment.Attachments.AEJB_INFO);
         final CompositeIndex index = deploymentUnit.getAttachment(org.jboss.as.server.deployment.Attachments.COMPOSITE_ANNOTATION_INDEX);
