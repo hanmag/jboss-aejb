@@ -36,26 +36,24 @@ import javax.naming.NamingException;
 @Remote(AEjbClient.class)
 public class AEjbClientBean implements AEjbClient {
 
-	static Object client;
-	
-	private void getOrCreateAEjbClient() {
-		if (client == null)
-			try {
-				client = new InitialContext().lookup("java:global/aejb/client");
-			} catch (NamingException e) {
-				e.printStackTrace();
-			}
+	//Can not save the client
+	private Object createAEjbClient() {
+		try {
+			return new InitialContext().lookup("java:global/aejb/client");
+		} catch (NamingException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override
 	public Object getAEjbClient() {
-		getOrCreateAEjbClient();
-		return client;
+		return createAEjbClient();
 	}
 
 	@Override
 	public boolean blockAEjb(String aejbName) {
-		getOrCreateAEjbClient();
+		Object client = createAEjbClient();
 		try {
 			return (Boolean) client.getClass().getDeclaredMethod("blockAEjb", String.class).invoke(client, aejbName);
 		} catch (IllegalArgumentException e) {
@@ -74,7 +72,7 @@ public class AEjbClientBean implements AEjbClient {
 
 	@Override
 	public boolean resumeAEjb(String aejbName) {
-		getOrCreateAEjbClient();
+		Object client = createAEjbClient();
 		try {
 			return (Boolean) client.getClass().getDeclaredMethod("resumeAEjb", String.class).invoke(client, aejbName);
 		} catch (IllegalArgumentException e) {
@@ -93,7 +91,7 @@ public class AEjbClientBean implements AEjbClient {
 
 	@Override
 	public boolean switchAEjb(String fromName, String toName, String protocol) {
-		getOrCreateAEjbClient();
+		Object client = createAEjbClient();
 		try {
 			return (Boolean) client.getClass().getDeclaredMethod("switchAEjb", String.class, String.class, String.class).invoke(client, fromName, toName, protocol);
 		} catch (IllegalArgumentException e) {
