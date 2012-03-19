@@ -41,6 +41,7 @@ public class AEjbInjectionAnnotationProcessor implements DeploymentUnitProcessor
 
 	@Override
 	public void deploy(DeploymentPhaseContext phaseContext)	throws DeploymentUnitProcessingException {
+		log.debug("AEjbInjectionAnnotationProcessor ===> deploy phaseContext.");
 		// get hold of the deployment unit.
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         final Map<String,AcContainer> aejbInfo = deploymentUnit.getAttachment(org.nju.artemis.aejb.deployment.Attachments.AEJB_INFO);
