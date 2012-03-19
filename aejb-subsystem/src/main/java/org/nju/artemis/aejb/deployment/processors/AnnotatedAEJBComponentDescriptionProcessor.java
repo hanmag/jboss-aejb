@@ -34,22 +34,19 @@ import org.nju.artemis.aejb.component.AcContainer;
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class AnnotatedAEJBComponentDescriptionProcessor implements DeploymentUnitProcessor {
-
 	Logger log = Logger.getLogger(AnnotatedAEJBComponentDescriptionProcessor.class);
 
 	private static final DotName ADAPTIVE_ANNOTATION = DotName.createSimple(Adaptive.class.getName());
-	
 	public static final Phase PHASE = Phase.PARSE;
 	// AEJBs must created after described EJBs
 	public static final int PRIORITY = 0x1210;
-	
 	public String unitName;
 
 	@Override
 	public void deploy(DeploymentPhaseContext phaseContext)	throws DeploymentUnitProcessingException {
+		log.debug("AnnotatedAEJBComponentDescriptionProcessor ===> deploy phaseContext");
 		// get hold of the deployment unit.
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-        
         // First, contains EJBs
 		if(!EjbDeploymentMarker.isEjbDeployment(deploymentUnit))
 			return;
@@ -75,10 +72,10 @@ public class AnnotatedAEJBComponentDescriptionProcessor implements DeploymentUni
 				continue;
 			
 			SessionBeanComponentDescription sessionBeanDescription = (SessionBeanComponentDescription) beanDescription;
-			String appName = sessionBeanDescription.getApplicationName();
+			String appName = moduleDescription.getEarApplicationName();
 			String moduleName = sessionBeanDescription.getModuleName();
 			String beanName = sessionBeanDescription.getEJBName();
-			String distinctName = "";
+			String distinctName = moduleDescription.getDistinctName();
 			SessionBeanType beanType = sessionBeanDescription.getSessionBeanType();
 			
 			AcContainer accon = new AcContainer(appName, moduleName, beanName, distinctName, beanType);
