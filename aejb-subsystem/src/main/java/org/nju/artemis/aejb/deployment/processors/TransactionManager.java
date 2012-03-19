@@ -26,11 +26,18 @@ public interface TransactionManager extends TransactionTrigger{
 	String getName();
 
 	/**
-	 * Returns whether this transaction is active or not
+	 * Returns whether transactions are active or not
 	 * 
 	 * @return
 	 */
 	boolean isActive();
+	
+	/**
+	 * Returns whether this transaction is active or not
+	 * 
+	 * @return
+	 */
+	boolean isActive(String objectId);
 
 	/**
 	 * Get the name of all ports that have been used in this transaction and
@@ -61,7 +68,7 @@ public interface TransactionManager extends TransactionTrigger{
 	 */
 	String[] getInvolvedPorts();
 
-	String getTransactionmethodName();
+	String getTransactionMethodName();
 
 	void createTransaction(String objectId);
 
