@@ -9,7 +9,8 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
- * Recommand after DependencyHandler
+ * This handler shift component's {@link AEjbStatus status},blocking or resuming.<br>
+ * Recommend used after DependencyHandler
  * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
@@ -19,14 +20,14 @@ public class StatusShiftHandler implements OperationStepHandler {
 	@SuppressWarnings("unchecked")
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
-		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
+//		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
 		final List<String> neighbors = (List<String>) context.getContextData().get("neighbors");
 		final String targetName = context.getTargetName();
 		final AEjbStatus status = (AEjbStatus) context.getContextData().get(AEjbStatus.class);
 		if(neighbors == null)
 			throw new OperationFailedException("Neighbors is null, failed to shift status.");
 		for(String aejbName:neighbors) {
-			AcContainer con = utilities.getContainer(aejbName);
+			AcContainer con = AEjbUtilities.getContainer(aejbName);
 			if(con == null)
 				throw new OperationFailedException("Can not find neighbor's container: " + aejbName + ".");
 			con.getEvolutionStatistics().setAEjbStatus(targetName, status);
