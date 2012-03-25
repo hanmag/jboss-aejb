@@ -6,8 +6,9 @@ import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
 import org.nju.artemis.aejb.evolution.handlers.DependencyChangeHandler;
 import org.nju.artemis.aejb.evolution.handlers.DependencyComputeHandler;
-import org.nju.artemis.aejb.evolution.handlers.ComponentDirectHandler;
-import org.nju.artemis.aejb.evolution.handlers.InterfaceIdentifyHandler;
+import org.nju.artemis.aejb.evolution.handlers.ComponentInstanceDirectHandler;
+import org.nju.artemis.aejb.evolution.handlers.InterfaceCompareHandler;
+import org.nju.artemis.aejb.evolution.handlers.OperationStepHandler;
 
 /**
  * This evolution behavior used to switch component to a target one.<br>
@@ -15,7 +16,7 @@ import org.nju.artemis.aejb.evolution.handlers.InterfaceIdentifyHandler;
  * 
  * {@link InterfaceIdentifyHandler};
  * {@link DependencyComputeHandler};
- * {@link ComponentDirectHandler};
+ * {@link ComponentInstanceDirectHandler};
  * {@link DependencyChangeHandler}.
  * 
  * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
@@ -44,9 +45,9 @@ public class ComponentSwitcher extends EvolutionBehavior{
 
 	@Override
 	protected void initializeStepHandlers() {
-		handlers.add(new InterfaceIdentifyHandler());
+		handlers.add(new InterfaceCompareHandler());
 		handlers.add(new DependencyComputeHandler());
-		handlers.add(new ComponentDirectHandler());
+		handlers.add(new ComponentInstanceDirectHandler());
 		handlers.add(new DependencyChangeHandler());
 		// Not need lock component
 //		handlers.add(new OperationAlterHandler(ComponentLocker.LOCK));
@@ -67,6 +68,11 @@ public class ComponentSwitcher extends EvolutionBehavior{
 	@Override
 	public String getHandlerName() {
 		return HANDLER_NAME;
+	}
+
+	@Override
+	void rollBackWhenUnExpectedResult(OperationStepHandler handler) throws OperationFailedException {
+		throw new OperationFailedException(handler.getHandlerName() + " gets unexpected result, evolution interrupted.");
 	}
 
 }

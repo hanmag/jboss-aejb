@@ -26,9 +26,11 @@ public abstract class EvolutionBehavior implements OperationStepHandler{
 		for(Iterator<OperationStepHandler> iterator = handlers.iterator(); iterator.hasNext();) {
 			OperationStepHandler handler = iterator.next();
 			if(handler.execute(context) == OperationResult.UnExpected)
-				throw new OperationFailedException(handler.getHandlerName() + "gets unexpected result, evolution interrupted.");
+				rollBackWhenUnExpectedResult(handler);
 		}
 	}
 	
 	abstract protected OperationContext generateOperationContext();
+	
+	abstract void rollBackWhenUnExpectedResult(OperationStepHandler handler) throws OperationFailedException;
 }
