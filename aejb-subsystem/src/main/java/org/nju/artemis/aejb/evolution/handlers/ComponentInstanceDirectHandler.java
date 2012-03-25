@@ -13,32 +13,32 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
  * 
  * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
  */
-public class ComponentDirectHandler implements OperationStepHandler {
-	Logger log = Logger.getLogger(ComponentDirectHandler.class);
+public class ComponentInstanceDirectHandler implements OperationStepHandler {
+	Logger log = Logger.getLogger(ComponentInstanceDirectHandler.class);
 	private final String HANDLER_NAME = "ComponentDirectHandler";
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
-		log.info("------- ComponentDirectHandler Start -------");
-		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
+		log.debug("------- ComponentInstanceDirectHandler Start -------");
+//		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
 		final List<String> neighbors = (List<String>) context.getContextData().get("neighbors");
 		final String targetName = context.getTargetName();
 		final String toName = (String) context.getContextData().get("toName");
 		final String protocol = (String) context.getContextData().get("protocol");
-		final AcContainer toCon = utilities.getContainer(toName);
+		final AcContainer toCon = AEjbUtilities.getContainer(toName);
 		if(neighbors == null)
 			throw new OperationFailedException("Neighbors is null, failed to switch interceptors.");
 		if(toCon == null)
 			throw new OperationFailedException("Can not find Container: " + toName + ".");
 		for(String aejbName:neighbors) {
-			AcContainer con = utilities.getContainer(aejbName);
+			AcContainer con = AEjbUtilities.getContainer(aejbName);
 			if(con == null)
 				throw new OperationFailedException("Can not find neighbor's container: " + aejbName + ".");
 			con.getEvolutionStatistics().addToDirectionalMap(targetName, toCon);
 			con.getEvolutionStatistics().addProtocol(targetName, protocol);
 		}
-		log.info("------- ComponentDirectHandler Stop -------");
+		log.debug("------- ComponentInstanceDirectHandler Stop -------");
 		return OperationResult.Expected;
 	}
 
