@@ -15,13 +15,13 @@ import org.nju.artemis.aejb.evolution.OperationFailedException;
  * 
  * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
  */
-public class InterfaceIdentifyHandler implements OperationStepHandler {
-	Logger log = Logger.getLogger(InterfaceIdentifyHandler.class);
-	private static final String HANDLER_NAME = "InterfaceIdentifyHandler";
+public class InterfaceCompareHandler implements OperationStepHandler {
+	Logger log = Logger.getLogger(InterfaceCompareHandler.class);
+	private static final String HANDLER_NAME = "InterfaceCompareHandler";
 	
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
-		log.info("------- InterfaceIdentifyHandler Start -------");
+		log.info("------- InterfaceCompareHandler Start -------");
 		final String fromName = context.getTargetName();
 		final String toName = (String) context.getContextData().get("toName");
 		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
@@ -30,15 +30,15 @@ public class InterfaceIdentifyHandler implements OperationStepHandler {
 		if(toName == null)
 			throw new OperationFailedException(fromName + "'s toName is null");
 		log.info("fromName = " + fromName + ";toName = " + toName);
-		AcContainer fromContainer = utilities.getContainer(fromName);
-		AcContainer toContainer = utilities.getContainer(toName);
+		AcContainer fromContainer = AEjbUtilities.getContainer(fromName);
+		AcContainer toContainer = AEjbUtilities.getContainer(toName);
 		if(fromContainer == null || toContainer == null)
 			throw new OperationFailedException(fromName + " or " + toName + " is not an AEJB.");
 		if(fromContainer.getLocalView().size() != toContainer.getLocalView().size() || fromContainer.getRemoteView().size() != toContainer.getRemoteView().size())
 			throw new OperationFailedException(fromName + " and " + toName + "'s view size are not equal.");
 		boolean locale = equalSet(fromContainer.getLocalView(), toContainer.getLocalView());
 		boolean remote = equalSet(fromContainer.getRemoteView(), toContainer.getRemoteView());
-		log.info("------- InterfaceIdentifyHandler Stop -------");
+		log.info("------- InterfaceCompareHandler Stop -------");
 		return (locale && remote) ? OperationResult.Expected : OperationResult.UnExpected;
 	}
 
