@@ -15,7 +15,7 @@ import org.nju.artemis.aejb.component.interceptors.InvocationFilterInterceptor;
 import org.nju.artemis.aejb.component.interceptors.InvocationDirectInterceptor;
 import org.nju.artemis.aejb.component.interceptors.TransactionSecurityInterceptor;
 import org.nju.artemis.aejb.deployment.processors.TransactionManager;
-import org.nju.artemis.aejb.evolution.handlers.InterfaceIdentifyHandler;
+import org.nju.artemis.aejb.evolution.handlers.InterfaceCompareHandler;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
@@ -34,6 +34,8 @@ public class AcContainer {
 	final private SessionBeanType beanType;
 	//Invocation interceptors
 	private List<Interceptor> interceptors;
+	//Number of running invocation
+	private int running;
 	//Origin and Runtime depndencies
 	private Set<String> originDepndencies;
 	private Set<String> runtimeDepndencies;
@@ -126,6 +128,28 @@ public class AcContainer {
 		}
 	}
 	
+	public void addRunning() {
+		synchronized (this) {
+			running++;
+		}
+	}
+	
+	public void removeRunning() {
+		synchronized (this) {
+			running--;
+		}
+	}
+	
+	public boolean isActive() {
+		synchronized (this) {
+			if (running < 0) {
+				log.warn("AcContainer: " + getAEJBName() + " 's running == " + running);
+				running = 0;
+			}
+			return running != 0;
+		}
+	}
+	
 	/**
 	 * Runtime Dependencies, maybe have been changed
 	 * 
@@ -133,6 +157,7 @@ public class AcContainer {
 	 */
 	public Set<String> getRuntimeDependencies() {
 		if(runtimeDepndencies == null && originDepndencies == null)
+			
 			return null;
 		if(runtimeDepndencies == null)
 			runtimeDepndencies = new HashSet<String>(originDepndencies);
@@ -182,11 +207,11 @@ public class AcContainer {
 		if(viewClass.isInterface() == false)
 			return null;
 		for(Class<?> remoteView:remoteViews) {
-			if(InterfaceIdentifyHandler.equals(remoteView, viewClass))
+			if(InterfaceCompareHandler.equals(remoteView, viewClass))
 				return remoteView;
 		}
 		for(Class<?> localView:localViews) {
-			if(InterfaceIdentifyHandler.equals(localView, viewClass))
+			if(InterfaceCompareHandler.equals(localView, viewClass))
 				return localView;
 		}
 		return null;
