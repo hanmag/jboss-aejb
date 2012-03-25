@@ -4,6 +4,8 @@ import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
 
 /**
+ * This handler can alter OperationContext's operation name.
+ * 
  * @author <a href="mailto:wangjue1199@gmail.com">Jason</a>
  */
 public class OperationAlterHandler implements OperationStepHandler {
