@@ -68,7 +68,7 @@ public class AEjbUtilities implements Service<AEjbUtilities>{
 		}
 	}
 	
-	public AcContainer getContainer(String aejbName) {
+	public static AcContainer getContainer(String aejbName) {
 		for(Entry<String, Map<String, AcContainer>> entry:DeploymentUnits.entrySet()) {
 			Map<String, AcContainer> mapValue = entry.getValue();
 			for(Entry<String, AcContainer> en:mapValue.entrySet()) {
