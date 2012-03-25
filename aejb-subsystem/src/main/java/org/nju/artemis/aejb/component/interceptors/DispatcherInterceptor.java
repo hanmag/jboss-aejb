@@ -14,9 +14,10 @@ import org.jboss.ejb.client.StatelessEJBLocator;
 import org.jboss.invocation.Interceptor;
 import org.jboss.invocation.InterceptorContext;
 import org.jboss.logging.Logger;
+import org.nju.artemis.aejb.component.AEjbUtilities;
 
 /**
- * This interceptor find the target AEjb and create, invoke proxy.
+ * This interceptor find the target AEjb and create, invoke proxy. Manage the running number.
  * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
@@ -43,15 +44,19 @@ public class DispatcherInterceptor implements Interceptor {
 		EJBLocator ejbLocator = null;
 		Object result = null;
 		final String proxyName = "Proxy:" + appName + "/" + moduleName + "/" + beanName + "/" + distinctName + "/" + viewClass + "/" + stateful;
+		final String aejbName = moduleName + "/" + beanName;
 		log.info(proxyName);
 		if(proxyMap.containsKey(proxyName)) {
 			final Proxy proxy = (Proxy) proxyMap.get(proxyName);
 	        try {
+	        	AEjbUtilities.getContainer(aejbName).addRunning();
 				result = proxy.getInvocationHandler(proxy).invoke(proxy, context.getMethod(), context.getParameters());
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (Throwable e) {
 				e.printStackTrace();
+			} finally {
+				AEjbUtilities.getContainer(aejbName).removeRunning();
 			}
 	        log.info("DispatcherInterceptor: stop process invocation");
 	        return result;
@@ -69,11 +74,14 @@ public class DispatcherInterceptor implements Interceptor {
         }
         final Proxy proxy = (Proxy)EJBClient.createProxy(ejbLocator);
         try {
+        	AEjbUtilities.getContainer(aejbName).addRunning();
 			result = proxy.getInvocationHandler(proxy).invoke(proxy, context.getMethod(), context.getParameters());
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Throwable e) {
 			e.printStackTrace();
+		} finally {
+			AEjbUtilities.getContainer(aejbName).removeRunning();
 		}
         proxyMap.put(proxyName, proxy);
         log.info("DispatcherInterceptor: stop process invocation.");
