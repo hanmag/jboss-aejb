@@ -24,22 +24,23 @@ public class TransactionSecurityInterceptor implements Interceptor {
 	
 	@Override
 	public Object processInvocation(InterceptorContext context) throws Exception {
-		log.info("TransactionSecurityInterceptor: start process invocation");
+		log.debug("TransactionSecurityInterceptor: start process invocation");
 		String param0 = (String) context.getParameters()[0];
 		String[] splits = param0.split("/");
-		if(splits.length != 2)
+		if(splits.length != 2) {
 			context.proceed();
+		}
 		final String transactionName = splits[0];
 		final String objectId = splits[1];
 		final String targetName = (String) context.getContextData().get("aejbName");
 		final String protocol = container.getEvolutionStatistics().getProtocolByBeanName(targetName);
-		log.info("transactionName = " + transactionName + ",objectId = " + objectId + ",protocol = " + protocol);
+		log.debug("transactionName = " + transactionName + ",objectId = " + objectId + ",protocol = " + protocol);
 		if(protocol == null || isValidProtocolName(protocol) == false)
 			return context.proceed();
 		boolean ts = checkTransactionSecurity(targetName, objectId, container.getTransactionManager(transactionName), protocol);
-		log.info("checkTransactionSecurity = " + ts);
+		log.debug("checkTransactionSecurity = " + ts);
 		context.putPrivateData(Boolean.class, ts);
-		log.info("TransactionSecurityInterceptor: stop process invocation");
+		log.debug("TransactionSecurityInterceptor: stop process invocation");
 		return context.proceed();
 	}
 
