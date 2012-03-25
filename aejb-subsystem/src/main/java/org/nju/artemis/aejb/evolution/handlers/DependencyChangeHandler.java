@@ -21,18 +21,20 @@ public class DependencyChangeHandler implements OperationStepHandler {
 	@Override
 	public OperationResult execute(OperationContext context) throws OperationFailedException {
 		log.info("------- DependencyChangeHandler Start -------");
-		final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
-		final List<String> neighbors = (List<String>) context.getContextData().get("neighbors");
-		final String targetName = context.getTargetName();
-		final String toName = (String) context.getContextData().get("toName");
-		if(neighbors == null)
-			throw new OperationFailedException("Neighbors is null, failed to change dependency.");
-		for(String aejbName:neighbors) {
-			AcContainer con = utilities.getContainer(aejbName);
-			if(con == null)
-				throw new OperationFailedException("Can not find neighbor's container: " + aejbName + ".");
-			con.changeRuntimeDependencies(targetName, toName);
-			log.info(aejbName + "'s dependency changed from " + targetName + " to " + toName);
+		if (context.getContextData().get("dependencychange") == null || (Boolean) context.getContextData().get("dependencychange")) {
+//			final AEjbUtilities utilities = (AEjbUtilities) context.getContextData().get(AEjbUtilities.class);
+			final List<String> neighbors = (List<String>) context.getContextData().get("neighbors");
+			final String targetName = context.getTargetName();
+			final String toName = (String) context.getContextData().get("toName");
+			if (neighbors == null)
+				throw new OperationFailedException("Neighbors is null, failed to change dependency.");
+			for (String aejbName : neighbors) {
+				AcContainer con = AEjbUtilities.getContainer(aejbName);
+				if (con == null)
+					throw new OperationFailedException("Can not find neighbor's container: " + aejbName	+ ".");
+				con.changeRuntimeDependencies(targetName, toName);
+				log.info(aejbName + "'s dependency changed from " + targetName + " to " + toName);
+			}
 		}
 		log.info("------- DependencyChangeHandler Stop -------");
 		return OperationResult.Expected;
