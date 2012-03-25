@@ -1,5 +1,6 @@
 package org.nju.artemis.aejb.evolution.protocols;
 
+import org.nju.artemis.aejb.component.AcContainer;
 import org.nju.artemis.aejb.deployment.processors.TransactionManager;
 
 /**
@@ -20,4 +21,12 @@ public interface Protocol {
 	boolean checkTransactionSecurity(String targetName,	String objectId, TransactionManager transactionManager);
 	
 	String getName();
+	
+	/**
+	 * Component level
+	 * 
+	 * @param container
+	 * @return <b>true:</b> success<br><b>false</b>: unsuccess
+	 */
+	boolean setToSafePoint(AcContainer container);
 }

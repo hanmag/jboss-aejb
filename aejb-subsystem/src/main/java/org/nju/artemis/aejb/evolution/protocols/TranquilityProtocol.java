@@ -3,6 +3,7 @@ package org.nju.artemis.aejb.evolution.protocols;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+import org.nju.artemis.aejb.component.AcContainer;
 import org.nju.artemis.aejb.deployment.processors.TransactionManager;
 
 /**
@@ -22,7 +23,13 @@ public class TranquilityProtocol implements Protocol {
 
 	@Override
 	public String getName() {
-		return "QUIESCENCE";
+		return "TRANQUILITY";
+	}
+
+	@Override
+	public boolean setToSafePoint(AcContainer container) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
