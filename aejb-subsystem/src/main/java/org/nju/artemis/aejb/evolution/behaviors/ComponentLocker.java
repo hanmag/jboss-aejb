@@ -4,10 +4,17 @@ import org.nju.artemis.aejb.component.AEjbUtilities;
 import org.nju.artemis.aejb.evolution.OperationContext;
 import org.nju.artemis.aejb.evolution.OperationFailedException;
 import org.nju.artemis.aejb.evolution.handlers.DependencyComputeHandler;
+import org.nju.artemis.aejb.evolution.handlers.OperationStepHandler;
 import org.nju.artemis.aejb.evolution.handlers.StatusShiftHandler;
 import org.nju.artemis.aejb.management.client.AEjbClientImpl.AEjbStatus;
 
 /**
+ * This evolution behavior used to lock or unlock a component<br>
+ * It composed by two handlers:
+ * 
+ * {@link DependencyComputeHandler};
+ * {@link StatusShiftHandler}.
+ * 
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
 public class ComponentLocker extends EvolutionBehavior{
@@ -57,12 +64,15 @@ public class ComponentLocker extends EvolutionBehavior{
 			unlock(context.getTargetName());
 		} else
 			throw new OperationFailedException("operation name: " + operationName + " has not been defined.");
-		
 		return OperationResult.Expected;
 	}
 
 	@Override
 	public String getHandlerName() {
 		return HANDLER_NAME;
+	}
+
+	@Override
+	void rollBackWhenUnExpectedResult(OperationStepHandler handler) {
 	}
 }
