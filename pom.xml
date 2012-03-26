@@ -21,8 +21,9 @@
 
     <modules>
         <module>aejb-api</module>
-		<module>aejb-client</module>
+				<module>aejb-client</module>
         <module>aejb-subsystem</module>
+        <module>aejb-preprocessor</module>
     </modules>
 
    <build>

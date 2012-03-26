@@ -25,5 +25,6 @@
         <module name="javax.ejb.api"/>
         <module name="org.nju.artemis.client"/>
         <module name="org.jboss.xnio"/>
+        <module name="org.nju.artemis.preprocessor"/>
     </dependencies>
 </module>

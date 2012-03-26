@@ -116,6 +116,11 @@
 				<artifactId>aejb-client</artifactId>
 				<version>1.0-SNAPSHOT</version>
             </dependency>
+            <dependency>
+            	<groupId>org.nju.artemis.aejb</groupId>
+				<artifactId>aejb-preprocessor</artifactId>
+				<version>1.0-SNAPSHOT</version>
+            </dependency>
 			<dependency>
 				<groupId>org.jboss.as</groupId>
 				<artifactId>jboss-as-subsystem-test</artifactId>
@@ -162,6 +167,10 @@
             	<groupId>org.nju.artemis.aejb</groupId>
 				<artifactId>aejb-client</artifactId>
         </dependency>
+        <dependency>
+            	<groupId>org.nju.artemis.aejb</groupId>
+				<artifactId>aejb-preprocessor</artifactId>
+           </dependency>
 		<dependency>
 			<groupId>org.jboss.as</groupId>
 			<artifactId>jboss-as-subsystem-test</artifactId>
