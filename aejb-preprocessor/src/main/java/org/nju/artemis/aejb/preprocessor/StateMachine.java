@@ -2,25 +2,29 @@ package org.nju.artemis.aejb.preprocessor;
 
 import java.util.LinkedList;
 import java.util.List;
-
-
+/**
+ * 
+ * 
+ * @author <a href="mailto:njupsu@gmail.com">Su Ping</a>
+ */
 public class StateMachine {
 
-	// ��ʼ�ڵ�
+	// 开始节点
 	private int start;
-	// ����ڵ�
+	// 终止节点
 	private int end;
-	// ���е�״̬�ڵ�
+	//抽取出的所有程序状态
 	private List states = new LinkedList();
-	// ���е���ת�¼�
+	//所有的跳转事件
 	private List<Event> events = new LinkedList<Event>();
-	
+
 	/**
 	 * 
 	 */
 	public StateMachine() {
 
 	}
+
 	/**
 	 * @return the start
 	 */
@@ -51,14 +55,13 @@ public class StateMachine {
 		this.end = end;
 	}
 
-
 	/**
 	 * @return the states
 	 */
 	public List getStates() {
 		return states;
 	}
-	
+
 	/**
 	 * @param states
 	 *            the states to set
@@ -66,69 +69,68 @@ public class StateMachine {
 	public void setStates(List states) {
 		this.states = states;
 	}
-	
-	public int getstate(int head,String event){
+
+	public int getstate(int head, String event) {
 		for (int i = 0; i < events.size(); i++) {
 			Event e = events.get(i);
-			if(e.getHead()==head&&e.getEvent().equals(event))
+			if (e.getHead() == head && e.getEvent().equals(event))
 				return e.getTail();
 		}
 		return -1;
 	}
-	public int stateindex(int index){
-		for(int i = 0; i < states.size(); i ++)
-		{
-			if((Integer)states.get(i) == index)
+
+	public int stateindex(int index) {
+		for (int i = 0; i < states.size(); i++) {
+			if ((Integer) states.get(i) == index)
 				return i;
 		}
 		return -1;
-		
+
 	}
-	
+
 	public void addState(int state) {
 		states.add(state);
 	}
 
-	public void deleteState(int state){
-		for(int i = 0; i < states.size(); i ++)
-		{
-			if((Integer)states.get(i) == state)
+	public void deleteState(int state) {
+		for (int i = 0; i < states.size(); i++) {
+			if ((Integer) states.get(i) == state)
 				states.remove(i);
 		}
 	}
+
 	public void mergeStates(int s1, int s2) {
 
 		int s1_index = states.indexOf(s1);
 		states.remove(s1_index);
 		for (int i = 0; i < events.size(); i++) {
 			Event e = events.get(i);
-			if(e.getTail()==s1){
+			if (e.getTail() == s1) {
 				e.setTail(s2);
-			}/*else if(e.getHead()==s1){
-				e.setHead(s2);
-			}*/
+			}/*
+			 * else if(e.getHead()==s1){ e.setHead(s2); }
+			 */
 		}
 	}
+
 	public int getStatesCount() {
 
 		return states.size();
 	}
-	
 
 	public void addEvent(Event event) {
 		events.add(event);
 	}
-	public void deleteEvent(Event event)
-	{
-		for(int i = 0; i < events.size(); i ++)
-		{
-			if(event.getEvent().equals(events.get(i).getEvent()))
+
+	public void deleteEvent(Event event) {
+		for (int i = 0; i < events.size(); i++) {
+			if (event.getEvent().equals(events.get(i).getEvent()))
 				events.remove(i);
 		}
 	}
-	public List<Event> getEvents(){
+
+	public List<Event> getEvents() {
 		return events;
 	}
 
 }
-
