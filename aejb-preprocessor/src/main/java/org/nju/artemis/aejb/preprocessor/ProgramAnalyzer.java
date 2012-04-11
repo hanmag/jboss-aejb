@@ -1,28 +1,19 @@
 package org.nju.artemis.aejb.preprocessor;
+
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.ISTORE;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.RETURN;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.jar.*;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -47,262 +38,274 @@ import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicInterpreter;
 import org.objectweb.asm.util.TraceClassVisitor;
+
 /**
  * 
  * 
  * @author <a href="mailto:njupsu@gmail.com">Su Ping</a>
  */
 public class ProgramAnalyzer {
-	//存放分析程序所要调用的EJB
-	private List<String> ejbs=new LinkedList();
-	//存放状态机信息，主要是分析程序的控制流
-	StateMachine stateMachine=new StateMachine();
-	//存放每个控制流程的具体信息，即si-ai-sj
-	ControlFlow controlflow=new ControlFlow();
-	//每个状态点已使用的对外调用
+	// 存放分析程序所要调用的EJB
+	private List<String> ejbs = new LinkedList();
+	// 存放状态机信息，主要是分析程序的控制流
+	StateMachine stateMachine = new StateMachine();
+	// 存放每个控制流程的具体信息，即si-ai-sj
+	ControlFlow controlflow = new ControlFlow();
+	// 每个状态点已使用的对外调用
 	List[] past;
-	//每个状态点将要的对外调用
+	// 每个状态点将要的对外调用
 	List[] future;
-	//对于已分析出的跳转及在改点要加入的跳转信息
+	// 对于已分析出的跳转及在改点要加入的跳转信息
 	Hashtable<AbstractInsnNode, String> jumpinf = new Hashtable<AbstractInsnNode, String>();
-	//分析出对应每个状态的所以可能的下步动作及所到达的下个状态
-	List<String> next=new LinkedList();
-	//分析出的所以状态信息
-	List<String> stateall=new LinkedList();
+	// 分析出对应每个状态的所以可能的下步动作及所到达的下个状态
+	List<String> next = new LinkedList();
+	// 分析出的所以状态信息
+	List<String> stateall = new LinkedList();
 
-	//字节码中插入transaction、触发trigger等信息
+	// 字节码中插入transaction、触发trigger等信息
 	public void transform(ClassNode cn) {
 		if ((cn.access & ACC_INTERFACE) == 0) {
 			setEjbs(cn);
-			// System.out.println("catch class!"+cn.name);
-			for (MethodNode mn : (List<MethodNode>) cn.methods) {
-				// System.out.println("catch class!"+mn.name);
-				if (isTransaction(mn, "Ljavax/aejb/Transaction;")) {
-					// System.out.println("begin analyze!");
-					InsnList insns = mn.instructions;
-					stateMachine.setStart(0);
-					stateMachine.setEnd(mn.instructions.size());
-					try {
-						ExtractControlFlow(cn.name, mn);
-					} catch (AnalyzerException ignored) {
-					}
-					recognize_state(0, 0, mn.instructions);
-					mergeState();
-					ExtractMetaData();
-					setNext();
-					// 字节码文件中插入抽取地状态及状态变化触发信息
-					Iterator<AnnotationNode> iter = mn.visibleAnnotations
-							.iterator();
-					while (iter.hasNext()) {
-						AnnotationNode an = iter.next();
-						if (an.desc.equals("Ljavax/aejb/Transaction;")) {
-							System.out.println(an.values);
-							List<Object> valuenew = new LinkedList<Object>();
-							valuenew.add("name");
-							valuenew.add(mn.name);
-							valuenew.add("states");
-							valuenew.add(stateall);
-							valuenew.add("next");
-							valuenew.add(next);
-							an.values = valuenew;
+			if (!ejbs.isEmpty()) {
+				System.out.println("Analyzing class:" + cn.name);
+				for (MethodNode mn : (List<MethodNode>) cn.methods) {
+					// System.out.println("catch class!"+mn.name);
+					if (isTransaction(mn, "Ljavax/aejb/Transaction;")) {
+						// System.out.println("begin analyze!");
+						InsnList insns = mn.instructions;
+						stateMachine.setStart(0);
+						stateMachine.setEnd(mn.instructions.size());
+						try {
+							ExtractControlFlow(cn.name, mn);
+						} catch (AnalyzerException ignored) {
 						}
-					}
-
-					LabelNode lb0 = new LabelNode();
-					LabelNode lb1 = new LabelNode();
-					LabelNode lb2 = new LabelNode();
-					LabelNode lb3 = new LabelNode();
-					LabelNode lb4 = new LabelNode();
-					LabelNode lb5 = new LabelNode();
-					LabelNode lb6 = new LabelNode();
-					mn.tryCatchBlocks.add(new TryCatchBlockNode(lb0, lb1, lb2,
-							"javax/naming/NamingException"));
-
-					InsnList begin = new InsnList();
-					int localnum = mn.localVariables.size();
-					begin.add(lb3);
-					begin.add(new InsnNode(ACONST_NULL));
-					begin.add(new VarInsnNode(ASTORE, localnum));
-					begin.add(lb0);
-					begin.add(new TypeInsnNode(NEW,
-							"javax/naming/InitialContext"));
-					begin.add(new InsnNode(DUP));
-					begin.add(new MethodInsnNode(INVOKESPECIAL,
-							"javax/naming/InitialContext", "<init>", "()V"));
-					begin.add(new VarInsnNode(ASTORE, localnum + 1));
-
-					begin.add(lb4);
-					begin.add(new VarInsnNode(ALOAD, localnum + 1));
-					begin.add(new LdcInsnNode(
-							"java:global/aejb/transactionmanager/" + mn.name));
-					begin.add(new MethodInsnNode(INVOKEINTERFACE,
-							"javax/naming/Context", "lookup",
-							"(Ljava/lang/String;)Ljava/lang/Object;"));
-					begin.add(new TypeInsnNode(CHECKCAST,
-							"javax/aejb/TransactionTrigger"));
-					begin.add(new VarInsnNode(ASTORE, localnum));
-					begin.add(lb1);
-					begin.add(new JumpInsnNode(GOTO, lb5));
-					begin.add(lb2);
-					begin.add(new FrameNode(Opcodes.F_FULL, 2, new Object[] {
-							mn.name, "javax/aejb/TransactionTrigger" }, 1,
-							new Object[] { "javax/naming/NamingException" }));
-					begin.add(new VarInsnNode(ASTORE, localnum + 1));
-
-					begin.add(lb6);
-					begin.add(new VarInsnNode(ALOAD, localnum + 1));
-					begin.add(new MethodInsnNode(INVOKEVIRTUAL,
-							"javax/naming/NamingException", "printStackTrace",
-							"()V"));
-					begin.add(lb5);
-
-					Iterator<AbstractInsnNode> i = insns.iterator();
-					int src = 0;
-					while (i.hasNext()) {
-						AbstractInsnNode i1 = i.next();
-						if (i1 instanceof MethodInsnNode) {
-							String owner = ((MethodInsnNode) i1).owner;
-							// System.out.println(((MethodInsnNode)
-							// i1).owner+","+((MethodInsnNode)i1).name+","+((MethodInsnNode)
-							// i1).desc);
-							if (ejbs.contains(owner)) {
-								String e = "Ejb." + owner + "."
-										+ ((MethodInsnNode) i1).name;
-								InsnList il = new InsnList();
-								il.add(new TypeInsnNode(NEW,
-										"java/lang/StringBuilder"));
-								il.add(new InsnNode(DUP));
-								il.add(new LdcInsnNode(mn.name + "/"));
-								il.add(new MethodInsnNode(INVOKESPECIAL,
-										"java/lang/StringBuilder", "<init>",
-										"(Ljava/lang/String;)V"));
-								il.add(new VarInsnNode(ALOAD, 0));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/Object", "toString",
-										"()Ljava/lang/String;"));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/StringBuilder", "append",
-										"(Ljava/lang/String;)Ljava/lang/StringBuilder;"));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/StringBuilder", "toString",
-										"()Ljava/lang/String;"));
-								insns.insert(i1.getPrevious(), il);
-								// System.out.println(((MethodInsnNode)
-								// i1).desc+"111"+((MethodInsnNode)
-								// i1).desc.replace("(",
-								// "(Ljava/lang/String;"));
-								InsnList trig = new InsnList();
-								trig.add(new VarInsnNode(ALOAD, localnum));
-								trig.add(new VarInsnNode(ALOAD, 0));
-								trig.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/Object", "toString",
-										"()Ljava/lang/String;"));
-								trig.add(new LdcInsnNode(e));
-								trig.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"javax/aejb/TransactionTrigger",
-										"trigger",
-										"(Ljava/lang/String;Ljava/lang/String;)V"));
-								if (i1.getNext().getOpcode() == ISTORE) {
-									insns.insert(i1.getNext(), trig);
-								} else {
-									insns.insert(i1, trig);
-								}
-								insns.insert(
-										i1.getPrevious(),
-										new MethodInsnNode(
-												INVOKEVIRTUAL,
-												((MethodInsnNode) i1).owner,
-												((MethodInsnNode) i1).name,
-												((MethodInsnNode) i1).desc
-														.replace("(",
-																"(Ljava/lang/String;")));
-								insns.remove(i1);
+						recognize_state(0, 0, mn.instructions);
+						mergeState();
+						ExtractMetaData();
+						setNext();
+						// 字节码文件中插入抽取地状态及状态变化触发信息
+						Iterator<AnnotationNode> iter = mn.visibleAnnotations
+								.iterator();
+						while (iter.hasNext()) {
+							AnnotationNode an = iter.next();
+							if (an.desc.equals("Ljavax/aejb/Transaction;")) {
+								List<Object> valuenew = new LinkedList<Object>();
+								valuenew.add("name");
+								valuenew.add(mn.name);
+								valuenew.add("states");
+								valuenew.add(stateall);
+								valuenew.add("next");
+								valuenew.add(next);
+								an.values = valuenew;
+								System.out.println(an.values);
 							}
+						}
 
-						} else {
-							if (jumpinf.containsKey(i1)) {
-								InsnList trig = new InsnList();
-								trig.add(new VarInsnNode(ALOAD, localnum));
-								trig.add(new VarInsnNode(ALOAD, 0));
-								trig.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/Object", "toString",
-										"()Ljava/lang/String;"));
-								trig.add(new LdcInsnNode(jumpinf.get(i1)));
-								trig.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"javax/aejb/TransactionTrigger",
-										"trigger",
-										"(Ljava/lang/String;Ljava/lang/String;)V"));
-								insns.insert(i1.getNext(), trig);
-							} else {
-								if (i1.getOpcode()>=IRETURN && i1.getOpcode()<=RETURN) {
+						LabelNode lb0 = new LabelNode();
+						LabelNode lb1 = new LabelNode();
+						LabelNode lb2 = new LabelNode();
+						LabelNode lb3 = new LabelNode();
+						LabelNode lb4 = new LabelNode();
+						LabelNode lb5 = new LabelNode();
+						LabelNode lb6 = new LabelNode();
+						mn.tryCatchBlocks.add(new TryCatchBlockNode(lb0, lb1,
+								lb2, "javax/naming/NamingException"));
+
+						InsnList begin = new InsnList();
+						int localnum = mn.localVariables.size();
+						begin.add(lb3);
+						begin.add(new InsnNode(ACONST_NULL));
+						begin.add(new VarInsnNode(ASTORE, localnum));
+						begin.add(lb0);
+						begin.add(new TypeInsnNode(NEW,
+								"javax/naming/InitialContext"));
+						begin.add(new InsnNode(DUP));
+						begin.add(new MethodInsnNode(INVOKESPECIAL,
+								"javax/naming/InitialContext", "<init>", "()V"));
+						begin.add(new VarInsnNode(ASTORE, localnum + 1));
+
+						begin.add(lb4);
+						begin.add(new VarInsnNode(ALOAD, localnum + 1));
+						begin.add(new LdcInsnNode(
+								"java:global/aejb/transactionmanager/"
+										+ mn.name));
+						begin.add(new MethodInsnNode(INVOKEINTERFACE,
+								"javax/naming/Context", "lookup",
+								"(Ljava/lang/String;)Ljava/lang/Object;"));
+						begin.add(new TypeInsnNode(CHECKCAST,
+								"javax/aejb/TransactionTrigger"));
+						begin.add(new VarInsnNode(ASTORE, localnum));
+						begin.add(lb1);
+						begin.add(new JumpInsnNode(GOTO, lb5));
+						begin.add(lb2);
+						begin.add(new FrameNode(Opcodes.F_FULL, 2,
+								new Object[] { mn.name,
+										"javax/aejb/TransactionTrigger" }, 1,
+								new Object[] { "javax/naming/NamingException" }));
+						begin.add(new VarInsnNode(ASTORE, localnum + 1));
+
+						begin.add(lb6);
+						begin.add(new VarInsnNode(ALOAD, localnum + 1));
+						begin.add(new MethodInsnNode(INVOKEVIRTUAL,
+								"javax/naming/NamingException",
+								"printStackTrace", "()V"));
+						begin.add(lb5);
+
+						Iterator<AbstractInsnNode> i = insns.iterator();
+						int src = 0;
+						while (i.hasNext()) {
+							AbstractInsnNode i1 = i.next();
+							if (i1 instanceof MethodInsnNode) {
+								String owner = ((MethodInsnNode) i1).owner;
+								// System.out.println(((MethodInsnNode)
+								// i1).owner+","+((MethodInsnNode)i1).name+","+((MethodInsnNode)
+								// i1).desc);
+								if (ejbs.contains(owner)) {
+									String e = "Ejb." + owner + "."
+											+ ((MethodInsnNode) i1).name;
+									InsnList il = new InsnList();
+									il.add(new TypeInsnNode(NEW,
+											"java/lang/StringBuilder"));
+									il.add(new InsnNode(DUP));
+									il.add(new LdcInsnNode(mn.name + "/"));
+									il.add(new MethodInsnNode(INVOKESPECIAL,
+											"java/lang/StringBuilder",
+											"<init>", "(Ljava/lang/String;)V"));
+									il.add(new VarInsnNode(ALOAD, 0));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/Object", "toString",
+											"()Ljava/lang/String;"));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/StringBuilder",
+											"append",
+											"(Ljava/lang/String;)Ljava/lang/StringBuilder;"));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/StringBuilder",
+											"toString", "()Ljava/lang/String;"));
+									insns.insert(i1.getPrevious(), il);
+									// System.out.println(((MethodInsnNode)
+									// i1).desc+"111"+((MethodInsnNode)
+									// i1).desc.replace("(",
+									// "(Ljava/lang/String;"));
 									InsnList trig = new InsnList();
 									trig.add(new VarInsnNode(ALOAD, localnum));
 									trig.add(new VarInsnNode(ALOAD, 0));
 									trig.add(new MethodInsnNode(INVOKEVIRTUAL,
 											"java/lang/Object", "toString",
 											"()Ljava/lang/String;"));
+									trig.add(new LdcInsnNode(e));
 									trig.add(new MethodInsnNode(INVOKEVIRTUAL,
 											"javax/aejb/TransactionTrigger",
-											"trigger", "(Ljava/lang/String;)V"));
-									insns.insert(i1.getPrevious(), trig);
+											"trigger",
+											"(Ljava/lang/String;Ljava/lang/String;)V"));
+									if (i1.getNext().getOpcode() == ISTORE) {
+										insns.insert(i1.getNext(), trig);
+									} else {
+										insns.insert(i1, trig);
+									}
+									insns.insert(
+											i1.getPrevious(),
+											new MethodInsnNode(
+													INVOKEVIRTUAL,
+													((MethodInsnNode) i1).owner,
+													((MethodInsnNode) i1).name,
+													((MethodInsnNode) i1).desc
+															.replace("(",
+																	"(Ljava/lang/String;")));
+									insns.remove(i1);
 								}
-							}
 
-						}
-
-					}
-					insns.insert(insns.getFirst(), begin);
-
-				} else {
-					InsnList insns = mn.instructions;
-					Iterator<AbstractInsnNode> i = insns.iterator();
-					while (i.hasNext()) {
-						AbstractInsnNode i1 = i.next();
-						if (i1 instanceof MethodInsnNode) {
-							String owner = ((MethodInsnNode) i1).owner;
-							if (ejbs.contains(owner)) {
-								InsnList il = new InsnList();
-								il.add(new TypeInsnNode(NEW,
-										"java/lang/StringBuilder"));
-								il.add(new InsnNode(DUP));
-								il.add(new LdcInsnNode( "/"));
-								il.add(new MethodInsnNode(INVOKESPECIAL,
-										"java/lang/StringBuilder", "<init>",
-										"(Ljava/lang/String;)V"));
-								il.add(new VarInsnNode(ALOAD, 0));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/Object", "toString",
-										"()Ljava/lang/String;"));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/StringBuilder", "append",
-										"(Ljava/lang/String;)Ljava/lang/StringBuilder;"));
-								il.add(new MethodInsnNode(INVOKEVIRTUAL,
-										"java/lang/StringBuilder", "toString",
-										"()Ljava/lang/String;"));
-								insns.insert(i1.getPrevious(), il);
-
-								insns.insert(
-										i1.getPrevious(),
-										new MethodInsnNode(
+							} else {
+								if (jumpinf.containsKey(i1)) {
+									InsnList trig = new InsnList();
+									trig.add(new VarInsnNode(ALOAD, localnum));
+									trig.add(new VarInsnNode(ALOAD, 0));
+									trig.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/Object", "toString",
+											"()Ljava/lang/String;"));
+									trig.add(new LdcInsnNode(jumpinf.get(i1)));
+									trig.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"javax/aejb/TransactionTrigger",
+											"trigger",
+											"(Ljava/lang/String;Ljava/lang/String;)V"));
+									insns.insert(i1.getNext(), trig);
+								} else {
+									if (i1.getOpcode() >= IRETURN
+											&& i1.getOpcode() <= RETURN) {
+										InsnList trig = new InsnList();
+										trig.add(new VarInsnNode(ALOAD,
+												localnum));
+										trig.add(new VarInsnNode(ALOAD, 0));
+										trig.add(new MethodInsnNode(
 												INVOKEVIRTUAL,
-												((MethodInsnNode) i1).owner,
-												((MethodInsnNode) i1).name,
-												((MethodInsnNode) i1).desc
-														.replace("(",
-																"(Ljava/lang/String;")));
-								insns.remove(i1);
+												"java/lang/Object", "toString",
+												"()Ljava/lang/String;"));
+										trig.add(new MethodInsnNode(
+												INVOKEVIRTUAL,
+												"javax/aejb/TransactionTrigger",
+												"trigger",
+												"(Ljava/lang/String;)V"));
+										insns.insert(i1.getPrevious(), trig);
+									}
+								}
+
 							}
 
 						}
-					}
-				}
+						insns.insert(insns.getFirst(), begin);
 
+					} else {
+						InsnList insns = mn.instructions;
+						Iterator<AbstractInsnNode> i = insns.iterator();
+						while (i.hasNext()) {
+							AbstractInsnNode i1 = i.next();
+							if (i1 instanceof MethodInsnNode) {
+								String owner = ((MethodInsnNode) i1).owner;
+								if (ejbs.contains(owner)) {
+									InsnList il = new InsnList();
+									il.add(new TypeInsnNode(NEW,
+											"java/lang/StringBuilder"));
+									il.add(new InsnNode(DUP));
+									il.add(new LdcInsnNode("/"));
+									il.add(new MethodInsnNode(INVOKESPECIAL,
+											"java/lang/StringBuilder",
+											"<init>", "(Ljava/lang/String;)V"));
+									il.add(new VarInsnNode(ALOAD, 0));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/Object", "toString",
+											"()Ljava/lang/String;"));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/StringBuilder",
+											"append",
+											"(Ljava/lang/String;)Ljava/lang/StringBuilder;"));
+									il.add(new MethodInsnNode(INVOKEVIRTUAL,
+											"java/lang/StringBuilder",
+											"toString", "()Ljava/lang/String;"));
+									insns.insert(i1.getPrevious(), il);
+
+									insns.insert(
+											i1.getPrevious(),
+											new MethodInsnNode(
+													INVOKEVIRTUAL,
+													((MethodInsnNode) i1).owner,
+													((MethodInsnNode) i1).name,
+													((MethodInsnNode) i1).desc
+															.replace("(",
+																	"(Ljava/lang/String;")));
+									insns.remove(i1);
+								}
+
+							}
+						}
+					}
+
+				}
 			}
 		}
 
 	}
 
-	//查询每个状态的next state及相应的触发事件
+	// 查询每个状态的next state及相应的触发事件
 	public void setNext() {
 		List<Event> event = stateMachine.getEvents();
 		List state = stateMachine.getStates();
@@ -324,7 +327,7 @@ public class ProgramAnalyzer {
 		}
 	}
 
-	//判断该方法是否是需要分析的方法
+	// 判断该方法是否是需要分析的方法
 	public boolean isTransaction(MethodNode mn, String annotationDesc) {
 
 		if (mn.visibleAnnotations != null) {
@@ -339,7 +342,7 @@ public class ProgramAnalyzer {
 		return false;
 	}
 
-	//查找外部依赖的EJB
+	// 查找外部依赖的EJB
 	public void setEjbs(ClassNode cn) {
 
 		if (cn.visibleAnnotations != null) {
@@ -369,7 +372,7 @@ public class ProgramAnalyzer {
 		}
 	}
 
-	//抽取程序字节码的control flow 
+	// 抽取程序字节码的control flow
 	public void ExtractControlFlow(String owner, final MethodNode mn)
 			throws AnalyzerException {
 		Analyzer a = new Analyzer(new BasicInterpreter()) {
@@ -386,7 +389,7 @@ public class ProgramAnalyzer {
 		a.analyze(owner, mn);
 	}
 
-	//递归实现抽取状态̬
+	// 递归实现抽取状态̬
 	public void recognize_state(int src, int last_state, InsnList insns) {
 		if (src < stateMachine.getEnd()) {
 			if (stateMachine.getStates().contains(src)) {
@@ -451,14 +454,15 @@ public class ProgramAnalyzer {
 							}
 						}
 					} else {
-						if(an.getOpcode()>=IRETURN && an.getOpcode()<=RETURN){
+						if (an.getOpcode() >= IRETURN
+								&& an.getOpcode() <= RETURN) {
 							stateMachine.addState(src);
-							stateMachine.addEvent(new Event(last_state, src, "end"));
+							stateMachine.addEvent(new Event(last_state, src,
+									"end"));
+						} else {
+							recognize_state(src + 1, last_state, insns);
 						}
-						else{
-						recognize_state(src + 1, last_state, insns);
-						}
-						}
+					}
 				}
 			}
 		} else {
@@ -467,7 +471,7 @@ public class ProgramAnalyzer {
 		}
 	}
 
-    //合并状态	
+	// 合并状态
 	public void mergeState() {
 		stateMachine.getStates().add(0, stateMachine.getStart());
 		for (int i = 0; i < stateMachine.getEvents().size(); i++) {
@@ -481,7 +485,7 @@ public class ProgramAnalyzer {
 		}
 	}
 
-	//显示所有状态变化
+	// 显示所有状态变化
 	public void showEvent() {
 		for (int i = 0; i < stateMachine.getEvents().size(); i++) {
 			Event event = stateMachine.getEvents().get(i);
@@ -493,10 +497,10 @@ public class ProgramAnalyzer {
 		}
 	}
 
-	//抽取future和past
+	// 抽取future和past
 	public void ExtractMetaData() {
 		int states_count = stateMachine.getStatesCount();
-		
+
 		List[] state = new LinkedList[states_count];
 		for (int i = 0; i < states_count; i++)
 			state[i] = new LinkedList();
@@ -509,7 +513,7 @@ public class ProgramAnalyzer {
 		}
 		// ///////////////////
 		List<Event> e = stateMachine.getEvents();
-		//两个数组分别存放每个状态的future和past
+		// 两个数组分别存放每个状态的future和past
 		past = new LinkedList[states_count];
 		for (int i = 0; i < states_count; i++)
 			past[i] = new LinkedList();
@@ -517,7 +521,7 @@ public class ProgramAnalyzer {
 		for (int i = 0; i < states_count; i++)
 			future[i] = new LinkedList();
 
-		//首先从前到后遍历事件列表，为每一个状态添加past，思路是：对于s0-a1-s1这一事件，s1的past=a0+s0的past
+		// 首先从前到后遍历事件列表，为每一个状态添加past，思路是：对于s0-a1-s1这一事件，s1的past=a0+s0的past
 		boolean changed = true;
 		while (changed) {
 			changed = false;
@@ -542,7 +546,7 @@ public class ProgramAnalyzer {
 					}
 			}
 		}
-		//然后从后到前遍历事件列表，为每一个状态添加future，思路类似之前
+		// 然后从后到前遍历事件列表，为每一个状态添加future，思路类似之前
 		changed = true;
 		while (changed) {
 			changed = false;
@@ -590,7 +594,7 @@ public class ProgramAnalyzer {
 
 	}
 
-	//显示字节码文件
+	// 显示字节码文件
 	public static void showClassSource(String file) {
 		FileInputStream is;
 		ClassReader cr;
@@ -616,46 +620,58 @@ public class ProgramAnalyzer {
 		};
 	}
 
-	public static void main(String args[]) {
-		try {
-
-			FileInputStream in = new FileInputStream("C:\\Users\\SuPing\\workspace\\asmtest\\bin\\Ttest.class");
-			//showClassSource("C:\\Users\\SuPing\\workspace\\asmtest\\bin\\test.class");
-			ProgramAnalyzer t = new ProgramAnalyzer();
-			ClassReader cr = new ClassReader(in);
-			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-			ClassVisitor cv = t.getClassAdapter(cw);
-			cr.accept(cv, 0);
-			byte[] b = cw.toByteArray();
-
-			// 获得分析文件的文件名，并将新生成的文件存放入E:\analize_result下
-			// String infilename=args[1].toString();
-			String infilename = "C:\\Users\\SuPing\\workspace\\asmtest\\bin\\Ttest.class";
-			StringTokenizer filename = new StringTokenizer(infilename, "\\");
-			String ss[] = new String[filename.countTokens()];
-			int i = 0;
-			while (filename.hasMoreTokens()) {
-				ss[i++] = filename.nextToken();
+	// find and analyze class files recursively
+	protected static void begin_analyze(File tempFile) {
+		if (tempFile.isDirectory()) {
+			File file[] = tempFile.listFiles();
+			for (int i = 0; i < file.length; i++) {
+				System.out.println("begin analyze file:" + file[i].getName());
+				begin_analyze(file[i]);
 			}
-			String file = ss[i - 1];
-			System.out.println(file);
-			File dir = new File("e:\\analize_result");
-			dir.mkdir();
-			File out = new File("e:\\analize_result\\" + file);
+		} else {
+			try {
+				if (tempFile.getName().endsWith(".class")) {
+					System.out.println(tempFile.getName());
+					FileInputStream input = new FileInputStream(
+							tempFile.getAbsolutePath());
+					ProgramAnalyzer t = new ProgramAnalyzer();
+					ClassReader cr = new ClassReader(input);
+					ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+					ClassVisitor cv = t.getClassAdapter(cw);
+					cr.accept(cv, 0);
 
-			FileOutputStream fout = new FileOutputStream(out);
-			fout.write(b);
-			fout.close();
-			showClassSource("e:\\analize_result\\" + file);
+					byte[] b = cw.toByteArray();
+					// fout = new FileOutputStream(new
+					// File("e:\\tempg\\"+file[i].getName()));
+					FileOutputStream fout = new FileOutputStream(new File(
+							tempFile.getAbsolutePath()));
+					fout.write(b);
+					fout.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 
-		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-
+			}
 		}
 
 	}
 
-}
+	public static void main(String args[]) {
+		try {
+			JarTool jarHelper = new JarTool();			
+			File srcJar = new File("E:\\a.jar");
+			// unjar the file in a temp file which we are to analyze
+			File tempFile = new File("e:\\temp");
+			tempFile.mkdir();
+			File destJar = new File("E:\\bb.jar");
 
+			jarHelper.unjarDir(srcJar, tempFile);
+			ProgramAnalyzer.begin_analyze(tempFile);
+			jarHelper.jarDir(tempFile, destJar);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}
