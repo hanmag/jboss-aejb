@@ -28,7 +28,7 @@ public class TransactionSecurityInterceptor implements Interceptor {
 		String param0 = (String) context.getParameters()[0];
 		String[] splits = param0.split("/");
 		if(splits.length != 2) {
-			context.proceed();
+			return context.proceed();
 		}
 		final String transactionName = splits[0];
 		final String objectId = splits[1];
