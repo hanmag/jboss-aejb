@@ -104,7 +104,6 @@
                                
                                <copy file="src/main/resources/module/main/module.xml" tofile="${env.JBOSS_HOME}/${module.dir}/module.xml" />
                                <copy file="target/${project.artifactId}.jar" todir="${env.JBOSS_HOME}/${module.dir}" />
-							   <copy file="target/${project.artifactId}.jar" todir="${env.JBOSS_HOME}/bin/client" />
                                <echo>Module ${module.name} has been created in the JBoss_Home/modules directory. </echo>
 							   <copy file="target/${project.artifactId}.jar" todir="${env.JBOSS_HOME}/standalone/deployments" />
                                <echo>Client EJB has been beployed in the JBoss_Home/deployments directory. </echo>

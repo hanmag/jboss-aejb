@@ -25,14 +25,14 @@ package org.nju.artemis.aejb.client;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.ejb.Remote;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 /**
  * @author <a href="wangjue1199@gmail.com">Jason</a>
  */
-@Singleton
+@Stateless
 @Remote(AEjbClient.class)
 public class AEjbClientBean implements AEjbClient {
 

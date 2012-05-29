@@ -5,7 +5,7 @@ package org.nju.artemis.aejb.management.cli;
  */
 public interface ManagementMessages {
 
-	String FunctionPrompt = "What type of function do you wish to ues? (Only for AEJB) \n a) Overview (List all AEJBs in the server) \n b) Deploy AEJB \t c) Undeploy AEJB \n d) Block AEJB \t\t e) Resume AEJB \n f) Replace AEJB \t g) Switch AEJB";
+	String FunctionPrompt = "What type of function do you wish to ues? (Only for AEJB) \n a) Overview (Lists all AEJBs in the server) \n b) Deploy AEJB (The target file can be EAR JAR WAR) \n c) Undeploy AEJB (Can not ensure the consistency after undeploy) \n d) Block AEJB (All invocations to the AEJB will be interrupted) \n e) Resume AEJB (Resume all interrupted invocations to the AEJB) \n f) Replace AEJB (Class level evolution, after all instances satisfy the condition) \n g) Switch AEJB (Instance level evolution, singleton session bean invalid)";
 
 	String JbossHomeNotSet = "JBOSS_HOME environment variable not set.";
 
