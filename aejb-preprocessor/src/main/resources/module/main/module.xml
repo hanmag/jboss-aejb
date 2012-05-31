@@ -1,5 +1,6 @@
 <module xmlns="urn:jboss:module:1.1" name="org.nju.artemis.preprocessor">
     <resources>
         <resource-root path="aejb-preprocessor-1.0-SNAPSHOT.jar"/>
+        <resource-root path="asm-all-4.0.jar"/>
     </resources>
 </module>
